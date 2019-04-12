@@ -43,6 +43,8 @@ def nu():  # aantal seconden sinds epoch om datum-tijd op te kunnen slaan in DB
     return int(datetime.datetime.today().timestamp())
 
 def tijdstring(secs_since_epoch): # geeft string terug met datum in leesbare vorm
+    if not secs_since_epoch:
+        return ""
     return str(datetime.datetime.fromtimestamp(secs_since_epoch))
 
 class BoekLeenDB:
