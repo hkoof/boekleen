@@ -56,6 +56,7 @@ if __name__ == "__main__":
             "categorie",
             "lener",
             "uitlenen",
+            "barcodes",
         )
     
     #### Command line parsing
@@ -81,12 +82,6 @@ if __name__ == "__main__":
             help="Pad naar de database file. Default: {}".format(prog.default_sqlite_database_file)
         )
     parser.add_argument(
-            "--custom-isbn-prefix",
-            nargs='?',
-            default=None,
-            help="Vaste eerste deel van eigen isbn code reeks",
-        )
-    parser.add_argument(
             "tabs",
             nargs='*',
             default="uitlenen",
@@ -105,7 +100,6 @@ if __name__ == "__main__":
         else:
             app.tabs.append(tab)
     app.db_path = args.database
-    app.custom_isbn_prefix = args.custom_isbn_prefix
     del args, parser
     app.run()
 

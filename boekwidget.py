@@ -14,7 +14,6 @@ class BoekWidget(Gtk.Grid):
         self.parent = parent
         self.db = database
         self.invalidated = True
-        self.custom_isbn_prefix = self.parent.props.application.custom_isbn_prefix
 
         columns = (
                 ColumnDef("ISBN", "isbn"),
@@ -46,9 +45,6 @@ class BoekWidget(Gtk.Grid):
         self.kastcode_select.widget.connect("changed", self.refresh)
         selectie_reset_button = Gtk.Button("Reset")
         selectie_reset_button.connect("clicked", self.on_selectie_reset_clicked)
-
-        self.volgende_code = Gtk.Label(valign=Gtk.Align.START, hexpand=True)
-        self.update_next_code()
 
         nieuw_boek_button = Gtk.Button("Nieuw")
         nieuw_boek_button.connect("clicked", self.on_nieuw_boek)
@@ -94,20 +90,14 @@ class BoekWidget(Gtk.Grid):
 
         zoek_paneel = Gtk.Frame(label="Zoeken")
         selectie_paneel = Gtk.Frame(label="Selecteren")
-        if self.custom_isbn_prefix:
-            info_paneel = Gtk.Frame(label="Volgende code")
         actie_paneel = Gtk.Frame(label="Acties")
 
         zoek_grid = Gtk.Grid(margin=12, column_spacing=8, row_spacing=12, orientation=Gtk.Orientation.VERTICAL, column_homogeneous=True)
         selectie_grid = Gtk.Grid(margin=12, column_spacing=12, row_spacing=12, orientation=Gtk.Orientation.VERTICAL, column_homogeneous=True)
-        if self.custom_isbn_prefix:
-            info_grid = Gtk.Grid(margin=12, column_spacing=12, row_spacing=12, orientation=Gtk.Orientation.VERTICAL, column_homogeneous=True)
         actie_grid = Gtk.Grid(margin=12, column_spacing=12, row_spacing=12, orientation=Gtk.Orientation.VERTICAL, column_homogeneous=True)
         
         zoek_paneel.add(zoek_grid)
         selectie_paneel.add(selectie_grid)
-        if self.custom_isbn_prefix:
-            info_paneel.add(info_grid)
         actie_paneel.add(actie_grid)
         
         zoek_grid.add(self.zoek_input)
@@ -119,9 +109,6 @@ class BoekWidget(Gtk.Grid):
         selectie_grid.add(Gtk.Label())
         selectie_grid.add(selectie_reset_button)
 
-        if self.custom_isbn_prefix:
-            info_grid.add(self.volgende_code)
-
         actie_grid.add(nieuw_boek_button)
         actie_grid.add(wijzig_boek_button)
         actie_grid.add(verwijder_boek_button)
@@ -132,10 +119,7 @@ class BoekWidget(Gtk.Grid):
             )
         paneel.attach(zoek_paneel, 0, 0, 1, 1)
         paneel.attach(selectie_paneel, 1, 0, 1, 1)
-        if self.custom_isbn_prefix:
-            paneel.attach(info_paneel, 2, 0, 1, 1)
-        else:
-            paneel.attach(Gtk.Label(expand=True) ,2, 0, 1, 1)
+        paneel.attach(Gtk.Label(hexpand=True), 2, 0, 1, 1)
         paneel.attach(actie_paneel, 3, 0, 1, 1)
 
         self.add(paneel)
@@ -160,16 +144,6 @@ class BoekWidget(Gtk.Grid):
         self.boeklijst.load(boeken)
         self.invalidated = False
 
-    def update_next_code(self):
-        if not self.custom_isbn_prefix:
-            return
-        next_code = self.db.max_isbn(self.custom_isbn_prefix)
-        if next_code:
-            next_code = str(int(next_code) + 1)
-            self.volgende_code.set_label(next_code)
-        else:
-            self.volgende_code.set_label("-------------")
-
     def on_zoek_input_activate(self, entry):
         self.parent.set_focus(None)
         self.refresh()
@@ -190,7 +164,6 @@ class BoekWidget(Gtk.Grid):
 
     def on_nieuw_boek(self, button):
         self.nieuw_boek()
-        self.update_next_code()
 
     def nieuw_boek(self, isbn=None):
         dialog = BoekDialog(self.parent, self.db)
