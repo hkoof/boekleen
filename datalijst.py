@@ -11,7 +11,7 @@ class ColumnDef():
         self.datatype = datatype
 
 class DataLijst(Gtk.ScrolledWindow):
-    def __init__(self, columns, *args, show_primary_key=True, **kwargs):
+    def __init__(self, columns, *args, show_primary_key=True, multiselect=False, **kwargs):
         #
         # columns is sequence van ColumnDef instanties
         #
@@ -24,6 +24,10 @@ class DataLijst(Gtk.ScrolledWindow):
         self.view.set_grid_lines(2)
 
         self.columns = columns
+        if multiselect:
+            selection = self.view.get_selection()
+            selection.set_mode(Gtk.SelectionMode.MULTIPLE)
+
         typelist = list()
         for col in self.columns:
             typelist.append(col.datatype)
