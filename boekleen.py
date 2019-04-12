@@ -23,7 +23,7 @@ from mainwindow import MainWindow
 
 class Application(Gtk.Application):
     def __init__(self, *args, **kwargs):
-        self.quit = False
+        self.stop = False
         super().__init__(*args,
                 application_id="hko.boekleen",
                 **kwargs
@@ -35,10 +35,10 @@ class Application(Gtk.Application):
             self.db = BoekLeenDB(self.db_path)
         except:
             print("Error opening database", self.db_path, file=sys.stderr)
-            self.quit = True
+            self.stop = True
 
     def do_activate(self):
-        if not self.quit:
+        if not self.stop:
             self.window = MainWindow(application=self, title="Boekleen")
             self.window.show()
 
