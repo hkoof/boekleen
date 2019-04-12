@@ -3,6 +3,7 @@
 import os.path
 import datetime
 import sqlite3
+import barcode
 
 import prog
 
@@ -140,7 +141,7 @@ class BoekLeenDB:
 
         self.db.commit()
 
-    def update_table(self, table, key, **kwargs):  
+    def update_table(self, table, key, **kwargs):
         # Als key niet een tuple (key_name, key_value) is, wordt key_name "id"
         # als default genomen.
         if isinstance(key, int):
@@ -332,17 +333,6 @@ class BoekLeenDB:
                        ''')
         return [rec['klas'] for rec in cursor.fetchall()]
 
-    def max_isbn(self, prefix):
-        cursor = self.db.cursor()
-        cursor.execute('''
-            select max(isbn) as maxisbn
-            from boeken
-            where isbn like ?
-        ''', ("{}%".format(prefix),)
-        )
-
-        return cursor.fetchone()['maxisbn']
-
     def alle_boeken(self):
         cursor = self.db.cursor()
         cursor.execute('''select isbn,
@@ -524,4 +514,108 @@ class BoekLeenDB:
 
         result.sort(reverse=True, key=lambda r: r['leendagen'])
         return result
+
+    def create_barcodes_table_if_not_exists(self):
+        self.db.execute('''
+            create table if not exists barcodes (
+                isbn text primary key not null unique,
+                printtime int,
+                notes text
+            )''')
+        self.db.execute('create index if not exists barcodes_printtime on barcodes (printtime)')
+        self.db.execute('create index if not exists barcodes_notes on barcodes (notes)')
+        self.db.commit()
+
+    def get_barcodes_where_clause(self, with_book=None, printed=None, with_notes=None):   # false, true or None
+        sql = ' '  # start with space: safe to append to other string
+        if with_book == False:    # note: not None
+            sql += 'where isbn not in (select isbn from boek) '
+        elif with_book == True:
+            sql += 'where isbn in (select isbn from boek) '
+        else:
+            sql += 'where 1 '
+
+        if printed == False:      # note: not None
+            sql += 'and printtime is null '
+        elif printed == True:
+            sql += 'and printtime is not null '
+
+        if with_notes == False:   # note: not None
+            sql += 'and notes is null '
+        elif with_notes == True:
+            sql += 'and notes is not null '
+        return sql
+
+    def get_barcodes(self, with_book=None, printed=None, with_notes=None):   # false, true or None
+        sql = '''
+            select isbn, printtime, notes
+            from barcodes
+        '''
+        sql += self.get_barcodes_where_clause(with_book, printed, with_notes)
+        sql += 'order by isbn'
+        cursor = self.db.cursor()
+        cursor.execute(sql)
+        result = list()
+        for rec in cursor:
+            r = dict(rec)
+            r['printtime'] = tijdstring(rec['printtime'])
+            result.append(r)
+        return result
+
+    def get_latest_custom_barcode(self):
+        self.create_barcodes_table_if_not_exists()
+
+        sql = 'select min(isbn) as isbn from barcodes'
+        sql += self.get_barcodes_where_clause(with_book=False, printed=None, with_notes=None)
+
+        cursor = self.db.cursor()
+        cursor.execute(sql)
+        result = cursor.fetchone()
+        return result
+
+    def create_new_barcodes(self, num=1):
+        latest_barcode = self.get_latest_custom_barcode()
+        if latest_barcode:
+            start = int(latest_barcode['isbn'][:12]) - 1
+            new_codes = barcode.generate_isbn_codes(str(start), num)
+        else:
+            new_codes = barcode.generate_isbn_codes(num=num)
+
+        for code in new_codes:
+            self.db.execute('insert into barcodes values (?, null, null)', (code,))
+        self.db.commit()
+
+    def mark_barcode_printed(self, code):
+        sql = '''
+            update barcodes
+            set printtime=?
+            where isbn=?
+        '''
+        self.db.execute(sql, (nu(), code))
+        self.db.commit()
+
+    def set_barcode_notes(self, code, notes):
+        sql = '''
+            update barcodes
+            set notes=?
+            where isbn=?
+        '''
+        self.db.execute(sql, (notes, code))
+        self.db.commit()
+
+if __name__ == "__main__":
+    db = BoekLeenDB("./test.db")
+    #db.create_new_barcodes(13)
+    #db.mark_barcode_printed('9799999999846')
+    #db.mark_barcode_printed('9799999999853')
+    #db.mark_barcode_printed('9799999999907')
+    db.set_barcode_notes("9799999999853", "Aloha #1")
+    db.set_barcode_notes("9799999999983", "Aloha #2")
+    tel = 0
+    #for rec in db.get_barcodes(printed=False):
+    for rec in db.get_barcodes(printed=False, with_notes=True):
+        print(rec['isbn'], rec['printtime'], rec['notes'])
+        tel += 1
+    print()
+    print("aantal:",tel)
 
