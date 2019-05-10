@@ -69,7 +69,7 @@ class BarcodesWidget(Gtk.Grid):
         #record = self.lijst.model[path]
         max_idx = max(len(self.barcodes) - 1, 0)
         begin_idx = path.get_indices()[0]
-        end_idx = min(begin_idx + self.labels_per_page, max_idx)
+        end_idx = min(begin_idx + self.labels_per_page - 1, max_idx)
 
         selection = self.lijst.view.get_selection()
         endpath = Gtk.TreePath(end_idx)
