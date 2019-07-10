@@ -3,7 +3,7 @@
 import sys
 import json
 import subprocess
-from cStringIO import StringIO
+from io import StringIO
 
 default_config_file_path = 'barcode-printer.conf'
 
@@ -31,16 +31,31 @@ class BarcodePrinter:
             self.load(config_file_path)
 
     def load(self, config_file_path=default_config_file_path):
-        self.config = dict(defaults)
+        self.config = defaults
         with open(config_file_path) as fd:
             self.config.update(json.load(fd))
+
+    def printconfig(self):
+        for k, v in self.config.items():
+            print("{} : {}".format(k,v))
 
     def print(self, barcodes, ps_file_path=None):
         if not ps_file_path:
             ps_file_path = '/tmp/debug.ps'   # debug later gewoon pipe
         input_stream = StringIO('\n'.join(barcodes))
+
+        pagesize = self.config['page-size']
+        unit = self.config['unit']
+
+        table = '{}x{}+{}+{}'.format(
+                self.config['table-columns'],
+                self.config['table-lines'],
+                self.config['table-x-margin'],
+                self.config['table-y-margin']
+            )
+
         pagewidth = self.config['page-width']
-        pageheight = self.config['pageheight']
+        pageheight = self.config['page-height']
         pagemargin_x = self.config['page-x-margin']
         pagemargin_y = self.config['page-y-margin']
 
