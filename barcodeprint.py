@@ -65,42 +65,49 @@ class BarcodePrinter:
         if pagemargin_x and pagemargin_y:
             geometry += '+{}+{}'.format(pagemargin_x, pagemargin_y)
 
-        table = '{}x{}+{}+{}'.format(
-                self.config['table-columns'],
-                self.config['table-lines'],
-                self.config['table-x-margin'],
-                self.config['table-y-margin']
-            )
-
-        if self.config['code-x-margin']:
+        codemargin_x = self.config.get('code-x-margin')
+        codemargin_y = self.config.get('code-y-margin')
 
         command = [
                 'barcode',
-                '-o {}', ps_file_path,
-                '-u' + self.config['unit']),
-                '-t' + table,
-                '-m'
+                '-o', ps_file_path,
+                '-p', pagesize,
+                '-u', self.config['unit'],
+                '-t', table,
         ]
         if geometry:
             command.append('-g {}'.format(geometry))
-        result = subprocess.run(
-                )
+        if codemargin_x:
+            command.append('-g')
+            if codemargin_y:
+                command.append('{},{}'.format(codemargin_x, codemargin_y))
+            else:
+                command.append(codemargin_x)
+
+        self.printcommand(command)
+#        result = subprocess.run(
+#                )
+#
+        
+    def printcommand(self, command):
+        for arg in command:
+            print(arg)
 
 if __name__ == '__main__':
-    config_file_path = default_config_file_path
     nargs = len(sys.argv)
 
-    if nargs == 2:
-        config_file_path = sys.argv[1]
-    elif nargs > 2:
+    if nargs > 2:
         print('Usage: {} [FILE]'.format(sys.argv[0]))
         sys.exit(1)
+    elif nargs == 2:
+        printer = BarcodePrinter()
+        printer.load(sys.argv[1])
+        printer.printconfig()
+        print()
+        printer.print(['dummy1','dummy2'])
 
-    try:
-        with open(config_file_path, 'x') as fd:
-            json.dump(defaults, fd, sort_keys=True, indent=4)
-            print(file=fd)  # extra newline
-    except FileExistsError:
-        print('Error: {} already exists'.format(config_file_path), file=sys.stderr)
-        sys.exit(1)
+    else: # nargs == 0
+        json.dump(defaults, sys.stdout, sort_keys=True, indent=4)
+        print()  # extra newline
+
 
