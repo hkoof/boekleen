@@ -5,7 +5,7 @@ import json
 import subprocess
 from io import StringIO
 
-default_config_file_path = 'barcode-printer.conf'
+config_file_path = 'barcode-printer.conf'
 
 defaults = {
     'page-size':       'A4',
@@ -26,18 +26,25 @@ defaults = {
     }
 
 class BarcodePrinter:
-    def __init__(self, config_file_path=None):
-        if config_file_path:
-            self.load(config_file_path)
+    def __init__(self):
+        self.loadconfig()
 
-    def load(self, config_file_path=default_config_file_path):
+    def loadconfig(self):
         self.config = defaults
-        with open(config_file_path) as fd:
-            self.config.update(json.load(fd))
+        try:
+            with open(config_file_path) as fdr:
+                self.config.update(json.load(fdr))
+        except FileNotFoundError:
+            print("Waarschuwing: {} aangemaakt met default waarden.".format(config_file_path), file=sys.stderr)
+            with open(config_file_path, 'x') as fdw:
+                json.dump(self.config, fdw, sort_keys=True, indent=4)
 
     def printconfig(self):
-        for k, v in self.config.items():
-            print("{} : {}".format(k,v))
+        json.dump(self.config, sys.stdout, sort_keys=True, indent=4)
+
+    def get_codes_per_page(self):
+        num_codes_pp = self.config['table-columns'] * self.config['table-lines']
+        return num_codes_pp
 
     def print(self, barcodes, ps_file_path=None):
         if not ps_file_path:
@@ -94,20 +101,11 @@ class BarcodePrinter:
             print(arg)
 
 if __name__ == '__main__':
-    nargs = len(sys.argv)
-
-    if nargs > 2:
+    if len(sys.argv) > 1:
         print('Usage: {} [FILE]'.format(sys.argv[0]))
-        sys.exit(1)
-    elif nargs == 2:
-        printer = BarcodePrinter()
-        printer.load(sys.argv[1])
-        printer.printconfig()
-        print()
-        printer.print(['dummy1','dummy2'])
-
-    else: # nargs == 0
-        json.dump(defaults, sys.stdout, sort_keys=True, indent=4)
-        print()  # extra newline
-
+        sys.exit(exitcode)
+    printer = BarcodePrinter()
+    printer.printconfig()
+    print()
+    printer.print(['dummy1','dummy2'])
 
