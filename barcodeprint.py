@@ -11,7 +11,7 @@ defaults = {
     'page-size':       'A4',
     'unit':            'mm',
 
-    'table-columns':   5,
+    'table-columns':   4,
     'table-lines':     12,
     'table-x-margin':  0,
     'table-y-margin':  0,
@@ -70,10 +70,6 @@ class BarcodePrinter:
         if pagewidth and pageheight:
             geometry = '{}x{}'.format(pagewidth, pageheight)
         if pagemargin_x and pagemargin_y:
-            geometry += '+{}+{}'.format(pagemargin_x, pagemargin_y)
-
-        codemargin_x = self.config.get('code-x-margin')
-        codemargin_y = self.config.get('code-y-margin')
 
         command = [
                 'barcode',
@@ -92,10 +88,13 @@ class BarcodePrinter:
                 command.append(codemargin_x)
 
         self.printcommand(command)
-#        result = subprocess.run(
-#                )
-#
-        
+        result = subprocess.run(
+                command,
+                stdin=input_stream,
+                shell=True,
+                capture_output=True,
+                )
+
     def printcommand(self, command):
         for arg in command:
             print(arg)
@@ -105,7 +104,58 @@ if __name__ == '__main__':
         print('Usage: {} [FILE]'.format(sys.argv[0]))
         sys.exit(exitcode)
     printer = BarcodePrinter()
-    printer.printconfig()
-    print()
-    printer.print(['dummy1','dummy2'])
+    print("codes per page:", printer.get_codes_per_page())
+    #printer.printconfig()
+    #print()
+
+    printer.print([
+        '9799999999990',
+        '9799999999983',
+        '9799999999976',
+        '9799999999969',
+        '9799999999952',
+        '9799999999945',
+        '9799999999938',
+        '9799999999921',
+        '9799999999914',
+        '9799999999907',
+        '9799999999891',
+        '9799999999884',
+        '9799999999877',
+        '9799999999860',
+        '9799999999853',
+        '9799999999846',
+        '9799999999839',
+        '9799999999822',
+        '9799999999815',
+        '9799999999808',
+        '9799999999792',
+        '9799999999785',
+        '9799999999778',
+        '9799999999761',
+        '9799999999754',
+        '9799999999747',
+        '9799999999730',
+        '9799999999723',
+        '9799999999716',
+        '9799999999709',
+        '9799999999693',
+        '9799999999686',
+        '9799999999679',
+        '9799999999662',
+        '9799999999655',
+        '9799999999648',
+        '9799999999631',
+        '9799999999624',
+        '9799999999617',
+        '9799999999600',
+        '9799999999594',
+        '9799999999587',
+        '9799999999570',
+        '9799999999563',
+        '9799999999556',
+        '9799999999549',
+        '9799999999532',
+        '9799999999525',
+        ])
 
