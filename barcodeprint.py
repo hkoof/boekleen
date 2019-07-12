@@ -37,10 +37,11 @@ class BarcodePrinter:
         except FileNotFoundError:
             print("Waarschuwing: {} aangemaakt met default waarden.".format(config_file_path), file=sys.stderr)
             with open(config_file_path, 'x') as fdw:
-                json.dump(self.config, fdw, sort_keys=True, indent=4)
+                json.dump(self.config, fdw, indent=4)
+                print(file=fdw)
 
     def printconfig(self):
-        json.dump(self.config, sys.stdout, sort_keys=True, indent=4)
+        json.dump(self.config, sys.stdout, indent=4)
 
     def get_codes_per_page(self):
         num_codes_pp = self.config['table-columns'] * self.config['table-lines']
@@ -70,6 +71,10 @@ class BarcodePrinter:
         if pagewidth and pageheight:
             geometry = '{}x{}'.format(pagewidth, pageheight)
         if pagemargin_x and pagemargin_y:
+            geometry += '+{}+{}'.format(pagemargin_x, pagemargin_y)
+
+        codemargin_x = self.config.get('code-x-margin')
+        codemargin_y = self.config.get('code-y-margin')
 
         command = [
                 'barcode',
@@ -88,12 +93,12 @@ class BarcodePrinter:
                 command.append(codemargin_x)
 
         self.printcommand(command)
-        result = subprocess.run(
-                command,
-                stdin=input_stream,
-                shell=True,
-                capture_output=True,
-                )
+#        result = subprocess.run(
+#                command,
+#                stdin=input_stream,
+#                shell=True,
+#                capture_output=True,
+#                )
 
     def printcommand(self, command):
         for arg in command:
