@@ -8,6 +8,11 @@ from io import StringIO
 config_file_path = 'barcode-printer.conf'
 
 defaults = {
+    '###': "'output' kan de speciale waarden 'stdout' of 'lpr' hebben",
+    '## ': "anders wordt de waarde van 'output' als file naam opgevat",
+    '#  ': '',
+    'output':          '/tmp/barcodes.ps',   # "stdout", "lpr" of een file naam
+
     'page-size':       'A4',
     'unit':            'mm',
 
@@ -35,10 +40,11 @@ class BarcodePrinter:
             with open(config_file_path) as fdr:
                 self.config.update(json.load(fdr))
         except FileNotFoundError:
-            print("Waarschuwing: {} aangemaakt met default waarden.".format(config_file_path), file=sys.stderr)
+            print("Waarschuwing: {} bestaat niet.".format(config_file_path), file=sys.stderr)
             with open(config_file_path, 'x') as fdw:
                 json.dump(self.config, fdw, indent=4)
                 print(file=fdw)
+            print("{} aangemaakt met default waarden.".format(config_file_path), file=sys.stderr)
 
     def printconfig(self):
         json.dump(self.config, sys.stdout, indent=4)
@@ -50,7 +56,6 @@ class BarcodePrinter:
     def print(self, barcodes, ps_file_path=None):
         if not ps_file_path:
             ps_file_path = '/tmp/debug.ps'   # debug later gewoon pipe
-        input_stream = StringIO('\n'.join(barcodes))
 
         pagesize = self.config['page-size']
         unit = self.config['unit']
@@ -92,13 +97,12 @@ class BarcodePrinter:
             else:
                 command.append(codemargin_x)
 
-        self.printcommand(command)
-#        result = subprocess.run(
-#                command,
-#                stdin=input_stream,
-#                shell=True,
-#                capture_output=True,
-#                )
+        result = subprocess.run(
+                command,
+                text=True,
+                input='\n'.join(barcodes),
+                )
+        return result.stderr
 
     def printcommand(self, command):
         for arg in command:
@@ -110,8 +114,6 @@ if __name__ == '__main__':
         sys.exit(exitcode)
     printer = BarcodePrinter()
     print("codes per page:", printer.get_codes_per_page())
-    #printer.printconfig()
-    #print()
 
     printer.print([
         '9799999999990',
