@@ -53,10 +53,7 @@ class BarcodePrinter:
         num_codes_pp = self.config['table-columns'] * self.config['table-lines']
         return num_codes_pp
 
-    def print(self, barcodes, ps_file_path=None):
-        if not ps_file_path:
-            ps_file_path = '/tmp/debug.ps'   # debug later gewoon pipe
-
+    def print(self, barcodes):
         pagesize = self.config['page-size']
         unit = self.config['unit']
 
@@ -83,11 +80,14 @@ class BarcodePrinter:
 
         command = [
                 'barcode',
-                '-o', ps_file_path,
                 '-p', pagesize,
                 '-u', self.config['unit'],
                 '-t', table,
         ]
+
+        if config['output'] != 'stdout' and config['output'] != 'lpr':
+            command.extend(('-o', ps_file_path,))
+
         if geometry:
             command.append('-g {}'.format(geometry))
         if codemargin_x:
@@ -97,11 +97,18 @@ class BarcodePrinter:
             else:
                 command.append(codemargin_x)
 
-        result = subprocess.run(
-                command,
-                text=True,
-                input='\n'.join(barcodes),
-                )
+        if config['output'] == 'lpr':
+            result = subprocess.Popen(
+                        command,
+                        text=True,
+                        input='\n'.join(barcodes),
+                    )
+        else:
+            result = subprocess.run(
+                        command,
+                        text=True,
+                        input='\n'.join(barcodes),
+                    )
         return result.stderr
 
     def printcommand(self, command):
