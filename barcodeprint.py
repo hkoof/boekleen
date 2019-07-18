@@ -3,7 +3,7 @@
 import sys
 import json
 import subprocess
-from io import StringIO
+from tempfile import TemporaryFile as Tmp
 
 config_file_path = 'barcode-printer.conf'
 
@@ -85,8 +85,8 @@ class BarcodePrinter:
                 '-t', table,
         ]
 
-        if config['output'] != 'stdout' and config['output'] != 'lpr':
-            command.extend(('-o', ps_file_path,))
+        if self.config['output'] != 'stdout' and self.config['output'] != 'lpr':
+            command.extend(('-o', self.config['output']))
 
         if geometry:
             command.append('-g {}'.format(geometry))
@@ -97,19 +97,35 @@ class BarcodePrinter:
             else:
                 command.append(codemargin_x)
 
-        if config['output'] == 'lpr':
-            result = subprocess.Popen(
-                        command,
-                        text=True,
-                        input='\n'.join(barcodes),
-                    )
+        if self.config['output'] == 'lpr':
+            with Tmp() as postscript, Tmp() as stderr:
+                proc1 = subprocess.Popen(
+                            command,
+                            stdin=subprocess.PIPE,
+                            stdout=postscript,
+                            stderr=stderr,
+                            universal_newlines=True,
+                        )
+                result1 = proc1.communicate(input='\n'.join(barcodes))
+                postscript.seek(0)
+
+                proc2 = subprocess.Popen(
+                            [ 'lpr' ],
+                            stdin=postscript,
+                            stderr=stderr,
+                            universal_newlines=True,
+                        )
+                result2 = proc1.communicate()
+                stderr.seek(0)
+                error = stderr.read()
+            return error
         else:
             result = subprocess.run(
                         command,
                         text=True,
                         input='\n'.join(barcodes),
                     )
-        return result.stderr
+            return result.stderr
 
     def printcommand(self, command):
         for arg in command:
