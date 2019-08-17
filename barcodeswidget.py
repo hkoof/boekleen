@@ -28,9 +28,9 @@ class BarcodesWidget(Gtk.Grid):
         print_button = Gtk.Button("Print")
         print_button.connect("clicked", self.on_print)
 
-        self.bestaand_check = Gtk.CheckButton(label="Alleen bestaande boeken")
+        self.bestaand_check = Gtk.CheckButton(label="Ook bestaande boeken")
         self.bestaand_check.connect("clicked", self.refresh)
-        self.geprint_check = Gtk.CheckButton(label="Alleen geprinte barcodes")
+        self.geprint_check = Gtk.CheckButton(label="Ook geprinte barcodes")
         self.geprint_check.connect("clicked", self.refresh)
 
         # layout
@@ -67,15 +67,12 @@ class BarcodesWidget(Gtk.Grid):
         self.refresh()
 
     def refresh(self, dummy=None):
-        bestaand = self.bestaand_check.get_active()
-        printed = self.geprint_check.get_active()
-        if not bestaand and not printed:
-            self.barcodes = self.db.get_barcodes()
-        else:
-            self.barcodes = self.db.get_barcodes(
-                    with_book=bestaand,
-                    printed=printed,
-                )
+        bestaand = None if self.bestaand_check.get_active() else False
+        printed = None if self.geprint_check.get_active() else False
+        self.barcodes = self.db.get_barcodes(
+                with_book=bestaand,
+                printed=printed,
+            )
         self.lijst.load(self.barcodes)
 
     def on_verwijder(self, button):
