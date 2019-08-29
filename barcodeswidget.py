@@ -27,8 +27,8 @@ class BarcodesWidget(Gtk.Grid):
     
         nieuw_button = Gtk.Button("Genereer nieuwe barcodes")
         nieuw_button.connect("clicked", self.on_nieuw)
-        verwijder_button = Gtk.Button("Verwijder")
-        verwijder_button.connect("clicked", self.on_verwijder)
+        self.verwijder_button = Gtk.Button("Verwijder")
+        self.verwijder_button.connect("clicked", self.on_verwijder)
         print_button = Gtk.Button("Print")
         print_button.connect("clicked", self.on_print)
 
@@ -45,7 +45,7 @@ class BarcodesWidget(Gtk.Grid):
                 row_spacing=8,
             )
         knoppen.attach(nieuw_button, 1, 0, 1, 1)
-        knoppen.attach(verwijder_button, 1, 1, 1, 1)
+        knoppen.attach(self.verwijder_button, 1, 1, 1, 1)
         knoppen.attach(print_button, 1, 2, 1, 1)
 
         selectie = Gtk.Grid(
@@ -96,7 +96,7 @@ class BarcodesWidget(Gtk.Grid):
             )
         self.lijst.load(self.barcodes)
 
-    def get_selected(self):
+    def get_selected_rows(self):
         model, path = self.selection.get_selected_rows()
         if not path:
             return []
@@ -105,8 +105,15 @@ class BarcodesWidget(Gtk.Grid):
             result.append(tuple([col for col in model[row]]))
         return result
 
-    def scan_selected_rows(self):
-        print(self.get_selected())
+    def disable_delete_button_if_custom_code_in_selection(self):
+        enabled = True
+        for row in self.get_selected_rows():
+            print(row)
+            if not row[2]:
+                enabled = False
+                break
+        print(enabled)
+        self.verwijder_button.set_sensitive(enabled)
 
     def on_verwijder(self, button):
         print("verwijderen barcode niet geimplemtneerd nog")
@@ -126,7 +133,7 @@ class BarcodesWidget(Gtk.Grid):
         pass
 
     def on_select_row(self, view):
-        self.scan_selected_rows()
+        self.disable_delete_button_if_custom_code_in_selection()
 
     def on_row_activated(self, view, path, column):
         #record = self.lijst.model[path]
@@ -136,7 +143,7 @@ class BarcodesWidget(Gtk.Grid):
 
         endpath = Gtk.TreePath(end_idx)
         self.selection.select_range(path, endpath)
-        self.scan_selected_rows()
+        self.disable_delete_button_if_custom_code_in_selection()
 
     def print_categorie(self, cat_id):
         dialog = CategorieDialog(self.parent, self.db, cat_id)
