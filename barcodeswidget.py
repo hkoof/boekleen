@@ -3,7 +3,6 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gio, Gtk, Gdk
 
 from datalijst import DataLijst, ColumnDef
-from categoriedialog import CategorieDialog
 
 class BarcodesWidget(Gtk.Grid):
     def __init__(self, parent, database):
@@ -117,18 +116,13 @@ class BarcodesWidget(Gtk.Grid):
         print("verwijderen barcode niet geimplemtneerd nog")
 
     def on_nieuw(self, button):
-        dialog = CategorieDialog(self.parent, self.db)
-        response = dialog.run()
-        if response == Gtk.ResponseType.OK:
-            data = dialog.get_data(False)
-            self.db.nieuwe_categorie(
-                    data.get("categorienaam"),
-                )
-        dialog.destroy()
-        self.refresh()
+        pass
 
     def on_print(self, button):
-        pass
+        codes = self.get_selected_rows()
+        for code in codes:
+            self.barcodes
+
 
     def on_select_row(self, view):
         self.disable_delete_button_if_custom_code_in_selection()
@@ -143,12 +137,3 @@ class BarcodesWidget(Gtk.Grid):
         self.selection.select_range(path, endpath)
         self.disable_delete_button_if_custom_code_in_selection()
 
-    def print_categorie(self, cat_id):
-        dialog = CategorieDialog(self.parent, self.db, cat_id)
-        response = dialog.run()
-        if response == Gtk.ResponseType.OK:
-            wijzigingen = dialog.get_data()
-            if wijzigingen:
-                self.db.update_table("categorie", cat_id, **wijzigingen)
-                self.refresh()
-        dialog.destroy()
