@@ -108,7 +108,6 @@ class BarcodesWidget(Gtk.Grid):
     def disable_delete_button_if_custom_code_in_selection(self):
         enabled = True
         for row in self.get_selected_rows():
-            print(row)
             if not row[2]:
                 enabled = False
                 break
