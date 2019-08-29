@@ -112,7 +112,6 @@ class BarcodesWidget(Gtk.Grid):
             if not row[2]:
                 enabled = False
                 break
-        print(enabled)
         self.verwijder_button.set_sensitive(enabled)
 
     def on_verwijder(self, button):
