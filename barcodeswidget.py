@@ -24,7 +24,6 @@ class BarcodesWidget(Gtk.Grid):
         self.selection.connect("changed", self.on_select_row)
         self.lijst.view.connect("row-activated", self.on_row_activated)
         #self.lijst.view.connect("cursor-changed", self.on_select_row)
-
     
         self.nieuw_button = Gtk.Button("Genereer nieuwe barcodes")
         self.nieuw_button.connect("clicked", self.on_nieuw)
@@ -38,16 +37,20 @@ class BarcodesWidget(Gtk.Grid):
         self.geprint_check = Gtk.CheckButton(label="Ook geprinte barcodes")
         self.geprint_check.connect("clicked", self.refresh)
 
+        self.bulk_select_button = Gtk.Button(label="Selecteer pagina vol")
+        self.bulk_select_button.connect("clicked", self.on_bulk_select)
+        self.bulk_label = Gtk.Label("(dubbel-klikken op een regel kan ook)")
+
         # layout
         #
-        knoppen = Gtk.Grid(
+        knoppen_grid = Gtk.Grid(
                 margin=12,
                 column_spacing=8,
                 row_spacing=8,
             )
-        knoppen.attach(self.nieuw_button, 1, 0, 1, 1)
-        knoppen.attach(self.verwijder_button, 1, 1, 1, 1)
-        knoppen.attach(self.print_button, 1, 2, 1, 1)
+        knoppen_grid.attach(self.nieuw_button, 1, 0, 1, 1)
+        knoppen_grid.attach(self.verwijder_button, 1, 1, 1, 1)
+        knoppen_grid.attach(self.print_button, 1, 2, 1, 1)
 
         filter_grid = Gtk.Grid(
                 margin=12,
@@ -62,6 +65,8 @@ class BarcodesWidget(Gtk.Grid):
                 column_spacing=8,
                 row_spacing=8,
             )
+        selecteren_grid.attach(self.bulk_select_button, 1, 0, 1, 1)
+        selecteren_grid.attach(self.bulk_label, 1, 1, 1, 1)
 
         selecteren_paneel = Gtk.Frame(label="Selecteren")
         selectie_paneel = Gtk.Frame(label="Filteren")
@@ -69,7 +74,7 @@ class BarcodesWidget(Gtk.Grid):
 
         selecteren_paneel.add(selecteren_grid)
         selectie_paneel.add(filter_grid)
-        actie_paneel.add(knoppen)
+        actie_paneel.add(knoppen_grid)
 
         paneel = Gtk.Grid(
                 margin=16,
@@ -88,6 +93,7 @@ class BarcodesWidget(Gtk.Grid):
         self.refresh()
 
     def refresh(self, dummy=None):
+        self.invalidated = True
         bestaand = None if self.bestaand_check.get_active() else False
         printed = None if self.geprint_check.get_active() else False
         self.barcodes = self.db.get_barcodes(
@@ -96,6 +102,12 @@ class BarcodesWidget(Gtk.Grid):
             )
         self.lijst.load(self.barcodes)
         self.disable_print_button_if_needed()
+        self.disable_delete_button_if_needed()
+        self.bulk_select_button.set_label("Selecteer hele pagina erbij\n({} codes)".format(self.get_labels_per_page()))
+
+    def get_labels_per_page(self):
+        self.printer.loadconfig()
+        return self.printer.get_codes_per_page()
 
     def get_selected_rows(self):
         model, path = self.selection.get_selected_rows()
@@ -107,8 +119,9 @@ class BarcodesWidget(Gtk.Grid):
         return result
 
     def disable_delete_button_if_needed(self):
-        enabled = True
+        enabled = False
         for row in self.get_selected_rows():
+            enabled = True
             if not row[2]:
                 enabled = False
                 break
@@ -134,16 +147,21 @@ class BarcodesWidget(Gtk.Grid):
         self.disable_delete_button_if_needed()
         self.disable_print_button_if_needed()
 
-    def get_labels_per_page(self):
-        self.printer.loadconfig()
-        return self.printer.get_codes_per_page()
-
     def on_row_activated(self, view, path, column):
+        self.auto_select_codes(path.get_indices()[0])
+
+    def on_bulk_select(self, button):
+        self.auto_select_codes()
+
+    def auto_select_codes(self, start=0, num=None):
+        if num == None:
+            num = self.get_labels_per_page()
+
+        startpath = Gtk.TreePath(start)
+
         max_idx = max(len(self.barcodes) - 1, 0)
-        begin_idx = path.get_indices()[0]
-        end_idx = min(begin_idx + self.get_labels_per_page() - 1, max_idx)
-
+        end_idx = min(start + num - 1, max_idx)
         endpath = Gtk.TreePath(end_idx)
-        self.selection.select_range(path, endpath)
-        self.disable_delete_button_if_needed()
 
+        self.selection.select_range(startpath, endpath)
+        self.disable_delete_button_if_needed()
