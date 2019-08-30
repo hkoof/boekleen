@@ -115,12 +115,10 @@ class BarcodesWidget(Gtk.Grid):
         if not path:
             return []
         result = list()
-        index = 0
         for row in path:
             rec = [col for col in model[row]]
-            rec.insert(0, index)
-            index += 1
-            result.append(rec)
+            rec.insert(0, row.get_indices()[0])
+            result.append(tuple(rec))
         return result
 
     def disable_delete_button_if_needed(self):
@@ -172,7 +170,11 @@ class BarcodesWidget(Gtk.Grid):
         self.auto_select_codes(path.get_indices()[0])
 
     def on_bulk_select(self, button):
-        self.auto_select_codes()
+        rows = self.get_selected_rows()
+        last_index = -1
+        if rows:
+            last_index = rows[-1][0]
+        self.auto_select_codes(last_index + 1)
 
     def auto_select_codes(self, start=0, num=None):
         if num == None:
