@@ -115,15 +115,19 @@ class BarcodesWidget(Gtk.Grid):
         if not path:
             return []
         result = list()
+        index = 0
         for row in path:
-            result.append(tuple([col for col in model[row]]))
+            rec = [col for col in model[row]]
+            rec.insert(0, index)
+            index += 1
+            result.append(rec)
         return result
 
     def disable_delete_button_if_needed(self):
         enabled = False
         for row in self.get_selected_rows():
             enabled = True
-            if not row[2]:
+            if not row[3]:
                 enabled = False
                 break
         self.verwijder_button.set_sensitive(enabled)
@@ -154,7 +158,7 @@ class BarcodesWidget(Gtk.Grid):
         dialog.destroy()
 
     def on_print(self, button):
-        codes = [row[0] for row in self.get_selected_rows()]
+        codes = [row[1] for row in self.get_selected_rows()]
         self.printer.print(codes)
         for code in codes:
             self.db.mark_barcode_printed(code)
