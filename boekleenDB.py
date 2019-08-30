@@ -609,8 +609,8 @@ if __name__ == "__main__":
     #db.mark_barcode_printed('9799999999846')
     #db.mark_barcode_printed('9799999999853')
     #db.mark_barcode_printed('9799999999907')
-    db.set_barcode_notes("9799999999853", "Aloha #1")
-    db.set_barcode_notes("9799999999983", "Aloha #2")
+    #db.set_barcode_notes("9799999999853", "Aloha #1")
+    #db.set_barcode_notes("9799999999983", "Aloha #2")
     tel = 0
     #for rec in db.get_barcodes(printed=False):
     for rec in db.get_barcodes(printed=False, with_notes=True):
