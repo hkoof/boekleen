@@ -4,6 +4,7 @@ from gi.repository import GLib, Gio, Gtk, Gdk
 
 from datalijst import DataLijst, ColumnDef
 from barcodeprint import BarcodePrinter
+from nieuwe_barcodes_dialog import NewBarcodesDialog
 
 class BarcodesWidget(Gtk.Grid):
     def __init__(self, parent, database):
@@ -134,7 +135,23 @@ class BarcodesWidget(Gtk.Grid):
         print("verwijderen barcode niet geimplemtneerd nog")
 
     def on_nieuw(self, button):
-        pass
+        aantal = None
+        dialog = NewBarcodesDialog(self.parent, int(self.get_labels_per_page()))
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            str_aantal = dialog.aantal.get_text()
+            try:
+                aantal = int(str_aantal)
+            except ValueError:
+                aantal = None
+                errdialog = Gtk.MessageDialog(self.parent, 0, Gtk.MessageType.ERROR,
+                        Gtk.ButtonsType.CANCEL, 'Error: "{}" is geen geldig aantal'.format(str_aantal))
+                errdialog.run()
+                errdialog.destroy()
+            if aantal:
+                self.db.create_new_barcodes(num=aantal)
+                self.refresh()
+        dialog.destroy()
 
     def on_print(self, button):
         codes = [row[0] for row in self.get_selected_rows()]
