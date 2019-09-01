@@ -546,6 +546,11 @@ class BoekLeenDB:
             sql += 'and notes is not null '
         return sql
 
+    def get_barcode_record(self, barcode):
+        cursor = self.db.cursor()
+        cursor.execute("select isbn, printtime, notes from barcodes where isbn=?", (barcode,))
+        return cursor.fetchone()
+
     def get_barcodes(self, with_book=None, printed=None, with_notes=None):   # false, true or None
         sql = '''
             select isbn, printtime, notes

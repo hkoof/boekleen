@@ -22,6 +22,8 @@ class BoekWidget(Gtk.Grid):
             )
         self.boeklijst = DataLijst(columns, show_primary_key=False, expand=True)
         self.boeklijst.view.connect("row-activated", self.on_row_activated)
+        self.selection = self.boeklijst.view.get_selection()
+        self.selection.connect("changed", self.on_select_row)
 
         # Selectie controls
         #
@@ -52,6 +54,10 @@ class BoekWidget(Gtk.Grid):
         wijzig_boek_button.connect("clicked", self.on_wijzig_boek)
         verwijder_boek_button = Gtk.Button("Verwijder")
         verwijder_boek_button.connect("clicked", self.on_verwijder_boek)
+
+        #self.printbaar = Gtk.ToggleButton("Barcode printbaar")
+        self.printbaar = Gtk.CheckButton("Barcode printbaar")
+        self.printbaar.connect("toggled", self.on_toggle_printbaar)
 
         self.default_categorie = None
         self.default_kastcode = None
@@ -112,6 +118,10 @@ class BoekWidget(Gtk.Grid):
         actie_grid.add(nieuw_boek_button)
         actie_grid.add(wijzig_boek_button)
         actie_grid.add(verwijder_boek_button)
+        filler = Gtk.Label()
+        filler.set_valign(Gtk.Align.FILL)
+        actie_grid.add(filler)
+        actie_grid.add(self.printbaar)
 
         paneel = Gtk.Grid(margin=16, column_spacing=16, row_spacing=16,
                 orientation=Gtk.Orientation.HORIZONTAL,
@@ -207,6 +217,32 @@ class BoekWidget(Gtk.Grid):
         record = self.boeklijst.model[path]
         isbn = record[0]
         self.verwijder_boek(isbn)
+
+    def on_toggle_printbaar(self, button):
+        row = self.get_selected_row(self.selection)
+        if row == None:
+            return
+        isbn = row[0]
+
+    def on_select_row(self, selecter):
+        row = self.get_selected_row(selecter)
+        if row == None:
+            self.printbaar.set_sensitive(False)
+            return
+        self.printbaar.set_sensitive(True)
+        barcode_rec = self.db.get_barcode_record(row[0])
+        if barcode_rec and not barcode_rec['printtime']:
+            self.printbaar.set_active(True)
+        else:
+            self.printbaar.set_active(False)
+
+    def get_selected_row(self, selection):
+        model, path = selection.get_selected()
+        if not path:
+            return None
+        row = model[path]
+        isbn = row[0]
+        return row
 
     def on_row_activated(self, view, path, column):
         record = self.boeklijst.model[path]
