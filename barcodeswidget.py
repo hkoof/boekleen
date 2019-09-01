@@ -24,7 +24,6 @@ class BarcodesWidget(Gtk.Grid):
         self.selection = self.lijst.view.get_selection()
         self.selection.connect("changed", self.on_select_row)
         self.lijst.view.connect("row-activated", self.on_row_activated)
-        #self.lijst.view.connect("cursor-changed", self.on_select_row)
     
         self.nieuw_button = Gtk.Button("Genereer nieuwe barcodes")
         self.nieuw_button.connect("clicked", self.on_nieuw)
