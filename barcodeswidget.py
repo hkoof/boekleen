@@ -174,6 +174,8 @@ class BarcodesWidget(Gtk.Grid):
         last_index = -1
         if rows:
             last_index = rows[-1][0]
+        if len(rows) == 1:
+            last_index -= 1   # als er 1 regel geselecteerd was niet 7 selecteren. dat 'voelt' niet goed.
         self.auto_select_codes(last_index + 1)
 
     def auto_select_codes(self, start=0, num=None):
