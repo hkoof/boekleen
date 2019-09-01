@@ -9,10 +9,16 @@ class NewBarcodesDialog(Gtk.Dialog):
                     Gtk.STOCK_OK, Gtk.ResponseType.OK)
             )
         box = self.get_content_area()
-        self.label = Gtk.Label("Aantal te genereren codes:", halign=Gtk.Align.END)
+        self.label = Gtk.Label("Aantal te genereren codes:", halign=Gtk.Align.START)
         self.aantal = Gtk.Entry()
-        box.add(self.label)
-        box.add(self.aantal)
+        self.aantal.set_alignment(xalign=1)
         self.aantal.set_text(str(aantal))
+
+        box.add(Gtk.Label())
+        box.add(self.label)
+        #box.add(Gtk.Label())
+        box.add(self.aantal)
+        box.add(Gtk.Label())
+
         self.show_all()
 
