@@ -91,7 +91,7 @@ class BarcodePrinter:
         if geometry:
             command.append('-g {}'.format(geometry))
         if codemargin_x:
-            command.append('-g')
+            command.append('-m')
             if codemargin_y:
                 command.append('{},{}'.format(codemargin_x, codemargin_y))
             else:
