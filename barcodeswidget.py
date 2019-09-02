@@ -133,7 +133,9 @@ class BarcodesWidget(Gtk.Grid):
         self.print_button.set_sensitive(self.get_selected_rows())
 
     def on_verwijder(self, button):
-        print("verwijderen barcode niet geimplemtneerd nog")
+        for row in self.get_selected_rows():
+            self.db.delete_barcode_record(row[1])
+        self.refresh()
 
     def on_nieuw(self, button):
         aantal = None
