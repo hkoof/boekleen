@@ -22,8 +22,6 @@ class BoekWidget(Gtk.Grid):
             )
         self.boeklijst = DataLijst(columns, show_primary_key=False, expand=True)
         self.boeklijst.view.connect("row-activated", self.on_row_activated)
-        self.selection = self.boeklijst.view.get_selection()
-        self.selection.connect("changed", self.on_select_row)
 
         # Selectie controls
         #
@@ -210,19 +208,6 @@ class BoekWidget(Gtk.Grid):
         isbn = record[0]
         self.verwijder_boek(isbn)
 
-    def on_select_row(self, selecter):
-        row = self.get_selected_row(selecter)
-        if row == None:
-            self.printbaar.set_sensitive(False)
-            return
-        self.printbaar.set_sensitive(True)
-        print(row[1])
-        barcode_rec = self.db.get_barcode_record(row[0])
-        if barcode_rec and not barcode_rec['printtime']:
-            self.printbaar.set_active(True)
-        else:
-            self.printbaar.set_active(False)
-
     def on_row_activated(self, view, path, column):
         record = self.boeklijst.model[path]
         isbn = record[0]
@@ -269,12 +254,25 @@ class BoekWidget(Gtk.Grid):
 
     def wijzig_boek(self, isbn):
         dialog = BoekDialog(self.parent, self.db, isbn)
+        barcode_rec = self.db.get_barcode_record(isbn)
+        is_printbaar = False
+        if barcode_rec and not barcode_rec['printtime']:
+            is_printbaar = True
+        dialog.printbaar.set_active(is_printbaar)
+
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
             wijzigingen = dialog.get_data()
             if wijzigingen and self.boek_geldig(wijzigingen):
                 self.db.update_table("boeken", ("isbn", isbn), **wijzigingen)
                 self.parent.invalidate()
+
+            if is_printbaar != dialog.printbaar.get_active():
+                if dialog.printbaar.get_active():
+                    self.db.set_barcode_record(isbn, dialog.items['titel'].widget.get_text())
+                else:
+                    pass
+                    # FIXME: verwijderen net als met de knop in barcodes-tab
         dialog.destroy()
 
     def on_isbn_scan(self, isbn):

@@ -1,3 +1,7 @@
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, Gdk
+
 from collections import OrderedDict
 
 from recorddialog import RecordDialog, Text, TextInput, TextCompletionInput, ChoiceInput, ColoredChoiceInput
@@ -32,6 +36,14 @@ class BoekDialog(RecordDialog):
         else:
             dialog_titel = "Nieuw boek"
         super().__init__(parent, dialog_titel)
+
+        # Extra item voor printbaar maken van barcode
+        #
+        self.printbaar = Gtk.CheckButton("Barcode printbaar")
+        self.grid.attach_next_to(self.printbaar, None, Gtk.PositionType.BOTTOM, 1, 1)
+        #self.grid.attach(self.printbaar, 1, 13 , 1, 1)
+        self.show_all()
+
         self.populate(self.boek)
         if isbn:
             self.set_isbn(isbn)
