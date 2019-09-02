@@ -599,28 +599,14 @@ class BoekLeenDB:
         self.db.execute(sql, (nu(), code))
         self.db.commit()
 
-    def set_barcode_notes(self, code, notes):
+    def set_barcode_record(self, code, notes):
         sql = '''
-            update barcodes
-            set notes=?
+            insert into barcodes(isbn, printtime, notes)
+            values (?, null, ?)
+            on conflict(isbn) do update
+            set notes=?, printtime = null
             where isbn=?
         '''
-        self.db.execute(sql, (notes, code))
+        self.db.execute(sql, (code, notes, notes, code))
         self.db.commit()
-
-if __name__ == "__main__":
-    db = BoekLeenDB("./test.db")
-    #db.create_new_barcodes(13)
-    #db.mark_barcode_printed('9799999999846')
-    #db.mark_barcode_printed('9799999999853')
-    #db.mark_barcode_printed('9799999999907')
-    #db.set_barcode_notes("9799999999853", "Aloha #1")
-    #db.set_barcode_notes("9799999999983", "Aloha #2")
-    tel = 0
-    #for rec in db.get_barcodes(printed=False):
-    for rec in db.get_barcodes(printed=False, with_notes=True):
-        print(rec['isbn'], rec['printtime'], rec['notes'])
-        tel += 1
-    print()
-    print("aantal:",tel)
 
