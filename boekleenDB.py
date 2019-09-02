@@ -610,3 +610,8 @@ class BoekLeenDB:
         self.db.execute(sql, (code, notes, notes, code))
         self.db.commit()
 
+    def delete_barcode_record(self, code):
+        sql = 'delete from barcodes where isbn = ?'
+        self.db.execute(sql, (code,))
+        self.db.commit()
+

@@ -271,8 +271,7 @@ class BoekWidget(Gtk.Grid):
                 if dialog.printbaar.get_active():
                     self.db.set_barcode_record(isbn, dialog.items['titel'].widget.get_text())
                 else:
-                    pass
-                    # FIXME: verwijderen net als met de knop in barcodes-tab
+                    self.db.delete_barcode_record(isbn)
         dialog.destroy()
 
     def on_isbn_scan(self, isbn):
