@@ -57,7 +57,7 @@ class BoekWidget(Gtk.Grid):
 
         #self.printbaar = Gtk.ToggleButton("Barcode printbaar")
         self.printbaar = Gtk.CheckButton("Barcode printbaar")
-        self.printbaar.connect("toggled", self.on_toggle_printbaar)
+        self.printbaar.connect("clicked", self.on_printbaar_clicked)
 
         self.default_categorie = None
         self.default_kastcode = None
@@ -218,11 +218,12 @@ class BoekWidget(Gtk.Grid):
         isbn = record[0]
         self.verwijder_boek(isbn)
 
-    def on_toggle_printbaar(self, button):
+    def on_printbaar_clicked(self, button):
         row = self.get_selected_row(self.selection)
+        print("TOGGLE", row[1])
         if row == None:
             return
-        isbn = row[0]
+        self.db.set_barcode_record(row[0], row[1])
 
     def on_select_row(self, selecter):
         row = self.get_selected_row(selecter)
@@ -230,6 +231,7 @@ class BoekWidget(Gtk.Grid):
             self.printbaar.set_sensitive(False)
             return
         self.printbaar.set_sensitive(True)
+        print(row[1])
         barcode_rec = self.db.get_barcode_record(row[0])
         if barcode_rec and not barcode_rec['printtime']:
             self.printbaar.set_active(True)
@@ -241,7 +243,6 @@ class BoekWidget(Gtk.Grid):
         if not path:
             return None
         row = model[path]
-        isbn = row[0]
         return row
 
     def on_row_activated(self, view, path, column):
