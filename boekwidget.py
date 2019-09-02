@@ -55,10 +55,6 @@ class BoekWidget(Gtk.Grid):
         verwijder_boek_button = Gtk.Button("Verwijder")
         verwijder_boek_button.connect("clicked", self.on_verwijder_boek)
 
-        #self.printbaar = Gtk.ToggleButton("Barcode printbaar")
-        self.printbaar = Gtk.CheckButton("Barcode printbaar")
-        self.printbaar.connect("clicked", self.on_printbaar_clicked)
-
         self.default_categorie = None
         self.default_kastcode = None
 
@@ -118,10 +114,6 @@ class BoekWidget(Gtk.Grid):
         actie_grid.add(nieuw_boek_button)
         actie_grid.add(wijzig_boek_button)
         actie_grid.add(verwijder_boek_button)
-        filler = Gtk.Label()
-        filler.set_valign(Gtk.Align.FILL)
-        actie_grid.add(filler)
-        actie_grid.add(self.printbaar)
 
         paneel = Gtk.Grid(margin=16, column_spacing=16, row_spacing=16,
                 orientation=Gtk.Orientation.HORIZONTAL,
@@ -218,13 +210,6 @@ class BoekWidget(Gtk.Grid):
         isbn = record[0]
         self.verwijder_boek(isbn)
 
-    def on_printbaar_clicked(self, button):
-        row = self.get_selected_row(self.selection)
-        print("TOGGLE", row[1])
-        if row == None:
-            return
-        self.db.set_barcode_record(row[0], row[1])
-
     def on_select_row(self, selecter):
         row = self.get_selected_row(selecter)
         if row == None:
@@ -237,13 +222,6 @@ class BoekWidget(Gtk.Grid):
             self.printbaar.set_active(True)
         else:
             self.printbaar.set_active(False)
-
-    def get_selected_row(self, selection):
-        model, path = selection.get_selected()
-        if not path:
-            return None
-        row = model[path]
-        return row
 
     def on_row_activated(self, view, path, column):
         record = self.boeklijst.model[path]
