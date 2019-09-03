@@ -8,7 +8,7 @@ Benodigde software
 
 Uitgaande van Debian GNU/Linux operating system:
 
-    apt-get install python3-gi
+    apt-get install python3-gi barcode
 
 Locales
 -------
