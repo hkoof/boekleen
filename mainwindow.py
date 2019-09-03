@@ -11,6 +11,7 @@ from kastcodewidget import KastcodeWidget
 from categoriewidget import CategorieWidget
 from persoonwidget import PersoonWidget
 from uitleenwidget import UitleenWidget
+from barcodeswidget import BarcodesWidget
 
 re_isbn_char = re.compile('^[0-9]$')
 re_isbn = re.compile('^[0-9]{13}$')
@@ -56,6 +57,7 @@ class MainWindow(Gtk.ApplicationWindow):
             elif tab == "categorie": add_tab(CategorieWidget, "Categoriën")
             elif tab == "lener": add_tab(PersoonWidget, "Leners")
             elif tab == "uitlenen": add_tab(UitleenWidget, "Uitlenen")
+            elif tab == "barcodes": add_tab(BarcodesWidget, "Streepjescodes")
             else:
                 print("Error: onbekende tab-naam. Hoort niet te gebeuren", file=sys.stderr)
 

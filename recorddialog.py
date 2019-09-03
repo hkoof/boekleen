@@ -16,15 +16,15 @@ class RecordDialog(Gtk.Dialog):
         self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
 
         self.box = self.get_content_area()
-        grid = Gtk.Grid(margin=12, column_spacing=8, row_spacing=8, column_homogeneous=True)
+        self.grid = Gtk.Grid(margin=12, column_spacing=8, row_spacing=8, column_homogeneous=True)
 
         i = 0
         for naam, item in self.items.items():
-            grid.attach(item.label, 0, i, 1 , 1)
-            grid.attach(item.widget, 1, i, item.width, 1)
+            self.grid.attach(item.label, 0, i, 1 , 1)
+            self.grid.attach(item.widget, 1, i, item.width, 1)
             i += 1
 
-        self.box.add(grid)
+        self.box.add(self.grid)
         self.show_all()
 
     def populate(self, data):
