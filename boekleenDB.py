@@ -568,8 +568,6 @@ class BoekLeenDB:
         return result
 
     def get_latest_custom_barcode(self):
-        self.create_barcodes_table_if_not_exists()
-
         sql = 'select min(isbn) as isbn from barcodes'
         sql += self.get_barcodes_where_clause(with_book=False, printed=None, with_notes=None)
 
@@ -580,7 +578,7 @@ class BoekLeenDB:
 
     def create_new_barcodes(self, num=1):
         latest_barcode = self.get_latest_custom_barcode()
-        if latest_barcode:
+        if latest_barcode and latest_barcode['isbn']:
             start = int(latest_barcode['isbn'][:12]) - 1
             new_codes = barcode.generate_isbn_codes(str(start), num)
         else:

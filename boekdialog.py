@@ -42,11 +42,14 @@ class BoekDialog(RecordDialog):
         self.printbaar = Gtk.CheckButton("Barcode printbaar")
         self.grid.attach_next_to(self.printbaar, None, Gtk.PositionType.BOTTOM, 1, 1)
         #self.grid.attach(self.printbaar, 1, 13 , 1, 1)
-        self.show_all()
 
         self.populate(self.boek)
         if isbn:
             self.set_isbn(isbn)
+
+    def populate(self, data):
+        super().populate(data)
+        self.show_all()
 
     def set_isbn(self, isbn):
         self.items['isbn'].widget.set_text(isbn)

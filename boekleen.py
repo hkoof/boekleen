@@ -33,6 +33,7 @@ class Application(Gtk.Application):
         Gtk.Application.do_startup(self)
         try:
             self.db = BoekLeenDB(self.db_path)
+            self.db.create_barcodes_table_if_not_exists()
         except:
             print("Error opening database", self.db_path, file=sys.stderr)
             self.quit = True
