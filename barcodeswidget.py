@@ -25,7 +25,7 @@ class BarcodesWidget(Gtk.Grid):
         self.selection.connect("changed", self.on_select_row)
         self.lijst.view.connect("row-activated", self.on_row_activated)
     
-        self.nieuw_button = Gtk.Button("Genereer nieuwe barcodes")
+        self.nieuw_button = Gtk.Button("Genereer nieuwe streepjescodes")
         self.nieuw_button.connect("clicked", self.on_nieuw)
         self.verwijder_button = Gtk.Button("Verwijder")
         self.verwijder_button.connect("clicked", self.on_verwijder)
@@ -34,7 +34,7 @@ class BarcodesWidget(Gtk.Grid):
 
         self.bestaand_check = Gtk.CheckButton(label="Ook bestaande boeken")
         self.bestaand_check.connect("clicked", self.refresh)
-        self.geprint_check = Gtk.CheckButton(label="Ook geprinte barcodes")
+        self.geprint_check = Gtk.CheckButton(label="Ook geprinte streepjescodes")
         self.geprint_check.connect("clicked", self.refresh)
 
         self.bulk_select_button = Gtk.Button(label="Selecteer pagina vol")

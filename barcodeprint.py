@@ -5,13 +5,13 @@ import json
 import subprocess
 from tempfile import TemporaryFile as Tmp
 
-config_file_path = 'barcode-printer.conf'
+config_file_path = 'streepjescode-printer.conf'
 
 defaults = {
     '###': "'output' kan de speciale waarden 'stdout' of 'lpr' hebben",
     '## ': "anders wordt de waarde van 'output' als file naam opgevat",
     '#  ': '',
-    'output':          '/tmp/barcodes.ps',   # "stdout", "lpr" of een file naam
+    'output':          '/tmp/streepjescodes.ps',   # "stdout", "lpr" of een file naam
 
     'page-size':       'A4',
     'unit':            'pt',

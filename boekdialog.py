@@ -39,7 +39,7 @@ class BoekDialog(RecordDialog):
 
         # Extra item voor printbaar maken van barcode
         #
-        self.printbaar = Gtk.CheckButton("Barcode printbaar")
+        self.printbaar = Gtk.CheckButton("Streepjescode printbaar")
         self.grid.attach_next_to(self.printbaar, None, Gtk.PositionType.BOTTOM, 1, 1)
         #self.grid.attach(self.printbaar, 1, 13 , 1, 1)
 

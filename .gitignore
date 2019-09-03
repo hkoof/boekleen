@@ -2,5 +2,5 @@ __pycache__/
 *.db
 .*.swp
 *.pyc
-barcode-printer.conf
+streepjescode-printer.conf
 
