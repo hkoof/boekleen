@@ -14,6 +14,7 @@ class UitleenWidget(Gtk.Grid):
         self.parent = parent
         self.db = database
         self.invalidated = True
+        self.lener = None
 
         self.barcode = Gtk.Entry()
         #self.barcode.set_can_focus(False)
@@ -157,12 +158,15 @@ class UitleenWidget(Gtk.Grid):
                 self.refresh()
             dialog.destroy()
         else:
-            dialog = UitleenDialog(self.parent, self.db, boek)
+            dialog = UitleenDialog(self.parent, self.db, boek, self.lener)
             response = dialog.run()
+            if response == 1:  # custom response: default lener
+                self.lener = dialog.default_lener
             if response == Gtk.ResponseType.OK:
-                lener = dialog.get_lener()
-                if lener:
-                    self.db.leenuit(lener, isbn)
+                self.lener = dialog.get_lener()
+            if response == 1 or response == Gtk.ResponseType.OK:
+                if self.lener:
+                    self.db.leenuit(self.lener, isbn)
                 else:
                     message = Gtk.MessageDialog(
                         self.parent,
