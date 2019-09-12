@@ -43,6 +43,16 @@ class BoekWidget(Gtk.Grid):
         self.kastcode_select.set_choices(kastcodes)
         self.kastcode_select.widget.set_active_id('')
         self.kastcode_select.widget.connect("changed", self.refresh)
+
+        self.status_select_alle = Gtk.RadioButton.new_with_label_from_widget(None, "Alle")
+        self.status_select_alle.connect("toggled", self.on_status_select_toggled)
+
+        self.status_select_aanwezig = Gtk.RadioButton.new_with_label_from_widget(self.status_select_alle, "Aanwezig")
+        self.status_select_aanwezig.connect("toggled", self.on_status_select_toggled)
+
+        self.status_select_uitgeleend = Gtk.RadioButton.new_with_label_from_widget(self.status_select_alle, "Uitgeleend")
+        self.status_select_uitgeleend.connect("toggled", self.on_status_select_toggled)
+
         selectie_reset_button = Gtk.Button("Reset")
         selectie_reset_button.connect("clicked", self.on_selectie_reset_clicked)
 
@@ -104,9 +114,24 @@ class BoekWidget(Gtk.Grid):
         zoek_grid.add(zoekbutton_grid)
         zoek_grid.add(zoekvelden_paneel)
 
+        status_select_grid = Gtk.Grid(
+                margin=8,
+                column_spacing=4,
+                row_spacing=4,
+                orientation=Gtk.Orientation.VERTICAL
+            )
+
+        status_select_grid.add(self.status_select_alle)
+        status_select_grid.add(self.status_select_aanwezig)
+        status_select_grid.add(self.status_select_uitgeleend)
+
+        status_select_paneel = Gtk.Frame(label="Status")
+        status_select_paneel.add(status_select_grid)
+
         selectie_grid.add(self.kastcode_select.widget)
         selectie_grid.add(self.categorie_select.widget)
-        selectie_grid.add(Gtk.Label())
+        selectie_grid.add(status_select_paneel)
+        #selectie_grid.add(Gtk.Label())
         selectie_grid.add(selectie_reset_button)
 
         actie_grid.add(nieuw_boek_button)
@@ -140,7 +165,13 @@ class BoekWidget(Gtk.Grid):
         zoekvelden = [naam for naam, veld in self.zoekvelden.items() if veld.get_active()]
         zoekstring = self.zoek_input.get_text()
 
-        boeken = self.db.zoek_boeken(zoekstring, zoekvelden, selectie)
+        select_uitgeleend = None
+        if self.status_select_aanwezig.get_active():
+            select_uitgeleend = False
+        elif self.status_select_uitgeleend.get_active():
+            select_uitgeleend = True
+
+        boeken = self.db.zoek_boeken(zoekstring, zoekvelden, selectie, select_uitgeleend)
         self.boeklijst.load(boeken)
         self.invalidated = False
 
@@ -159,8 +190,9 @@ class BoekWidget(Gtk.Grid):
         self.refresh()
 
     def on_selectie_reset_clicked(self, button):
-        self.categorie_select.widget.set_active(0)
-        self.kastcode_select.widget.set_active(0)
+        self.categorie_select.widget.set_active(False)
+        self.kastcode_select.widget.set_active(False)
+        self.status_select_alle.set_active(True)
 
     def on_nieuw_boek(self, button):
         self.nieuw_boek()
@@ -191,6 +223,10 @@ class BoekWidget(Gtk.Grid):
         dialog.destroy()
         self.parent.invalidate()
         self.refresh()
+
+    def on_status_select_toggled(self, button):
+        if button.get_active():
+            self.refresh()
 
     def on_wijzig_boek(self, button):
         model, path = self.boeklijst.view.get_selection().get_selected_rows()

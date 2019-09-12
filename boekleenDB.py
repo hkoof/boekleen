@@ -343,21 +343,23 @@ class BoekLeenDB:
                        ''')
         return cursor.fetchall()
 
-    def zoek_boeken(self, zoekstring=None, zoekcolumns=None, selectie=None):
+    def zoek_boeken(self, zoekstring=None, zoekcolumns=None, selectie=None, uitgeleend=None):
         if not zoekstring:
             if not selectie:
-                return self.alle_boeken()
+                if uitgeleend == None:
+                    return self.alle_boeken()
         elif not zoekcolumns:
             return list()
 
-        query = "select * from boek\nwhere\n"
+        query = "select * from boek where 1\n"
+
         query_args = list()
         if zoekstring:
-            search_condition = "(\n    " + "\n    or ".join(["{} like ?".format(col) for col in zoekcolumns]) + "\n)"
+            search_condition = "and (\n    " + "\n    or ".join(["{} like ?".format(col) for col in zoekcolumns]) + "\n)"
             args = [ "%{}%".format(zoekstring) for tmp in range(len(zoekcolumns))]
             query_args.extend(args)
         else:
-            search_condition = None
+            search_condition = ""
 
         if selectie:
             selection_list = list()
@@ -365,19 +367,25 @@ class BoekLeenDB:
             for key, val in selectie.items():
                 selection_list.append("{} = ?".format(key))
                 args.append(val)
-            selection_condition = "(\n    " + "\n    and ".join(selection_list) + "\n)"
+            selection_condition = "and (\n    " + "\n    and ".join(selection_list) + ")\n"
             query_args.extend(args)
         else:
-            selection_condition = None
+            selection_condition = ""
 
-        if search_condition:
-            query += search_condition
-            if selection_condition:
-                query += "\nand\n" + selection_condition
-        else:
-            query += selection_condition
+        if uitgeleend == True:
+            selection_condition += """
+                and isbn in (select isbn from uitleningen where teruggebracht is null
+                and uitleningen.persoon_id in (select id from persoon))
+            """
+        elif uitgeleend == False:
+            selection_condition += """
+                and isbn not in (select isbn from uitleningen where teruggebracht is null
+                and uitleningen.persoon_id in (select id from persoon))
+            """
 
-        query += "\norder by titel"
+        query += search_condition + selection_condition
+        query += "order by titel"
+
         cursor = self.db.cursor()
         cursor.execute(query, query_args)
         return cursor.fetchall()
