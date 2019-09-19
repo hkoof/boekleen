@@ -129,11 +129,10 @@ class UitleenWidget(Gtk.Grid):
 
     def leenlog(self, pangotext):
         where = self.logbuffer.get_start_iter()
-        now = datetime.now().strftime("%H:%M:S")
+        now = datetime.now().strftime("%H:%M:%S")
         pangotext = "{} {}\n".format(now, pangotext)
         self.logbuffer.insert_markup(where, pangotext, -1)
         self.logview.scroll_to_iter(where, 0.0, False, 0.0, 0.0)
-        self.logbuffer.select_range(self.logbuffer.get_start_iter(), where)
 
     def on_handmatig_clicked(self, button):
         isbn = self.barcode.get_text()
