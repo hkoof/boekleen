@@ -47,7 +47,7 @@ class UitleenDialog(Gtk.Dialog):
         lener_naam = "{} {}".format(lener['voornaam'], lener['achternaam'])
         self.default_lener_button.set_label(lener_naam)
         self.default_lener_button.set_sensitive(True)
-        self.set_default_response(1)
+        # self.set_default_response(1) # commented: barcode scanner verzend een 'enter'. Dit geeft fouten.
 
     def get_lener(self):
         persoon_id = self.lenerswidget.lijst.get_selected()
