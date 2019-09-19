@@ -6,7 +6,6 @@ from datetime import datetime
 
 from datalijst import DataLijst, ColumnDef
 from uitleendialog import UitleenDialog
-from terugbrengdialog import TerugbrengDialog
 
 class UitleenWidget(Gtk.Grid):
     def __init__(self, parent, database):
@@ -44,6 +43,12 @@ class UitleenWidget(Gtk.Grid):
                 "Alles nu in uitleen"
             )
         self.nu_uitgeleend_radio.connect("toggled", self.refresh)
+
+        self.logview = Gtk.TextView(hexpand=True)
+        self.logview.set_can_focus(False)
+        self.logview.set_editable(False)
+        self.logview.set_cursor_visible(False)
+        self.logbuffer = self.logview.get_buffer()
 
         columns = (
             ColumnDef("Titel", "titel"),
@@ -84,15 +89,22 @@ class UitleenWidget(Gtk.Grid):
         radio_paneel = Gtk.Frame(label="Selectie")
         radio_paneel.add(radio_grid)
 
+        scrolled_logview = Gtk.ScrolledWindow(margin=4)
+        scrolled_logview.add(self.logview)
+        log_paneel = Gtk.Frame(label="Log")
+        log_paneel.add(scrolled_logview)
+
         paneel = Gtk.Grid(
                 margin=12,
                 column_spacing=8,
                 row_spacing=8,
-                halign=Gtk.Align.START,
+                hexpand=True,
+                #halign=Gtk.Align.START,
             )
         paneel.attach(barcode_paneel, 0, 0, 1, 1)
         paneel.attach(radio_paneel, 1, 0, 1, 1)
-        paneel.attach(Gtk.Label(), 2, 0, 1, 1)
+        #paneel.attach(Gtk.Label(hexpand=True), 2, 0, 1, 1)
+        paneel.attach(log_paneel, 2, 0, 2, 1)
 
         self.add(paneel)
         self.add(self.leenlijst)
@@ -114,6 +126,14 @@ class UitleenWidget(Gtk.Grid):
             # Should never happen: radiobutton aanwezig die hier niet behandled wordt
         self.leenlijst.load(data)
         self.invalidated = False
+
+    def leenlog(self, pangotext):
+        where = self.logbuffer.get_start_iter()
+        now = datetime.now().strftime("%H:%M:S")
+        pangotext = "{} {}\n".format(now, pangotext)
+        self.logbuffer.insert_markup(where, pangotext, -1)
+        self.logview.scroll_to_iter(where, 0.0, False, 0.0, 0.0)
+        self.logbuffer.select_range(self.logbuffer.get_start_iter(), where)
 
     def on_handmatig_clicked(self, button):
         isbn = self.barcode.get_text()
@@ -150,12 +170,13 @@ class UitleenWidget(Gtk.Grid):
             return
         uitlening = self.db.uitgeleend(isbn)
         if uitlening:
-            dialog = TerugbrengDialog(self.parent, uitlening)
-            response = dialog.run()
-            if response == Gtk.ResponseType.OK:
-                self.db.brengterug(isbn)
-                self.refresh()
-            dialog.destroy()
+            self.db.brengterug(isbn)
+            self.refresh()
+            self.leenlog('<span foreground="green" size="x-large"><b>←</b></span> {} {} brengt <i>"{}"</i> terug'.format(
+                    uitlening['voornaam'],
+                    uitlening['achternaam'],
+                    uitlening['titel'],
+                ))
         else:
             dialog = UitleenDialog(self.parent, self.db, boek, self.lener)
             response = dialog.run()
@@ -165,7 +186,16 @@ class UitleenWidget(Gtk.Grid):
                 self.lener = dialog.get_lener()
             if response == 1 or response == Gtk.ResponseType.OK:
                 if self.lener:
-                    self.db.leenuit(self.lener, isbn)
+                    lener = self.db.persoon(self.lener)
+                    if not lener:
+                        print("error: onbekende lener: {}".format(self.lener))
+                    else:
+                        self.db.leenuit(self.lener, isbn)
+                        self.leenlog('<span foreground="blue" size="x-large"><b>→</b></span> {} {} leent <i>"{}"</i>'.format(
+                                lener['voornaam'],
+                                lener['achternaam'],
+                                boek['titel'],
+                            ))
                 else:
                     message = Gtk.MessageDialog(
                         self.parent,
