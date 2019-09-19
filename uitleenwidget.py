@@ -47,13 +47,12 @@ class UitleenWidget(Gtk.Grid):
 
         columns = (
             ColumnDef("Titel", "titel"),
+            ColumnDef("Auteur", "auteur"),
             ColumnDef("Voornaam", "voornaam"),
             ColumnDef("Achternaam", "achternaam"),
+            ColumnDef("Klas", "klas"),
             #ColumnDef("Uitgeleend", "uitgeleend", datatype=str),
-            #ColumnDef("Teruggebracht", "teruggebracht"),
-            #ColumnDef("Terugbrengtijd", "terugbrengtijd", datatype=int),
             ColumnDef("Leendagen", "leendagen", datatype=int),
-            #ColumnDef("Uitleentijd", "uitleentijd", datatype=str),
         )
         self.leenlijst = DataLijst(columns, show_primary_key=True, expand=True)
         #self.leenlijst.view.connect("row-activated", self.on_row_activated)

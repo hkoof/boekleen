@@ -459,6 +459,7 @@ class BoekLeenDB:
             select titel,
                    voornaam,
                    achternaam,
+                   klas,
                    auteur,
                    uitgeleend,
                    teruggebracht
