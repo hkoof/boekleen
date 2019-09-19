@@ -33,11 +33,11 @@ class UitleenWidget(Gtk.Grid):
             )
         self.een_week_radio.connect("toggled", self.refresh)
 
-        self.twee_weken_radio = Gtk.RadioButton.new_with_label_from_widget(
+        self.jaar_radio = Gtk.RadioButton.new_with_label_from_widget(
                 self.vandaag_radio,
-                "2 weken of langer in uitleen"
+                "1 jaar of langer in uitleen"
             )
-        self.twee_weken_radio.connect("toggled", self.refresh)
+        self.jaar_radio.connect("toggled", self.refresh)
 
         self.nu_uitgeleend_radio = Gtk.RadioButton.new_with_label_from_widget(
                 self.vandaag_radio,
@@ -79,7 +79,7 @@ class UitleenWidget(Gtk.Grid):
             )
         radio_grid.add(self.vandaag_radio)
         radio_grid.add(self.een_week_radio)
-        radio_grid.add(self.twee_weken_radio)
+        radio_grid.add(self.jaar_radio)
         radio_grid.add(self.nu_uitgeleend_radio)
         radio_paneel = Gtk.Frame(label="Selectie")
         radio_paneel.add(radio_grid)
@@ -105,8 +105,8 @@ class UitleenWidget(Gtk.Grid):
             data = self.db.uitleningen(uitgeleend=True, max_dagen_uitgeleend=0)
         elif self.een_week_radio.get_active():
             data = self.db.uitleningen(uitgeleend=True, min_dagen_uitgeleend=7)
-        elif self.twee_weken_radio.get_active():
-            data = self.db.uitleningen(uitgeleend=True, min_dagen_uitgeleend=14)
+        elif self.jaar_radio.get_active():
+            data = self.db.uitleningen(uitgeleend=True, min_dagen_uitgeleend=365)
         elif self.nu_uitgeleend_radio.get_active():
             data = self.db.uitleningen(uitgeleend=True)
         else:
