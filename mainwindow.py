@@ -27,7 +27,7 @@ class About(Gtk.Label):
         self.set_markup("<span size='x-large'>"
                         "<b>Boekleen</b>\n"
                         "GNU Public License (GPL)\n"
-                        "© 2017 Heiko Noordhof\n"
+                        "© 2019 Heiko Noordhof\n"
                         "</span>")
 
 class Stub(Gtk.Label):
