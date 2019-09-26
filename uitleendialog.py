@@ -62,4 +62,10 @@ class UitleenDialog(Gtk.Dialog):
         )
         self.boeklabel.set_use_markup(True)
 
-
+    def on_row_activated(self, view, path, column):
+        selection = view.get_selection()
+        model, path = selection.get_selected_rows()
+        if not path:
+            return
+        persoon_id = path[0]
+        print("--", persoon_id)

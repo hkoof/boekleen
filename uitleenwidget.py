@@ -60,7 +60,6 @@ class UitleenWidget(Gtk.Grid):
             ColumnDef("Leendagen", "leendagen", datatype=int),
         )
         self.leenlijst = DataLijst(columns, show_primary_key=True, expand=True)
-        #self.leenlijst.view.connect("row-activated", self.on_row_activated)
 
         # Layout
         #
