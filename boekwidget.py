@@ -19,7 +19,7 @@ class BoekWidget(Gtk.Grid):
                 ColumnDef("ISBN", "isbn"),
                 ColumnDef("Titel", "titel"),
                 ColumnDef("Auteur", "auteur"),
-                ColumnDef("Leningen", "leningen", datatype=int),
+                ColumnDef("# Leningen", "leningen", datatype=int),
             )
         self.boeklijst = DataLijst(columns, show_primary_key=False, expand=True)
         self.boeklijst.view.connect("row-activated", self.on_row_activated)
