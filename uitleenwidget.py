@@ -207,4 +207,4 @@ class UitleenWidget(Gtk.Grid):
                     message.destroy()
                 self.refresh()
             dialog.destroy()
-        self.vandaag_radio.set_active(True)
+        self.parent.invalidate()

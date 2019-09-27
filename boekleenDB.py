@@ -337,8 +337,10 @@ class BoekLeenDB:
         cursor = self.db.cursor()
         cursor.execute('''select isbn,
                                  titel,
-                                 auteur
-                          from   boek
+                                 auteur,
+                                 count(uitleningen.isbn) as leningen
+                          from boeken left outer join uitleningen using (isbn)
+                          group by isbn
                           order by titel
                        ''')
         return cursor.fetchall()
@@ -351,8 +353,13 @@ class BoekLeenDB:
         elif not zoekcolumns:
             return list()
 
-        query = "select * from boek where 1\n"
-
+        query = '''select isbn,
+                          titel,
+                          auteur,
+                          count(uitleningen.isbn) as leningen
+                   from boeken left outer join uitleningen using (isbn)
+                   where 1
+        '''
         query_args = list()
         if zoekstring:
             search_condition = "and (\n    " + "\n    or ".join(["{} like ?".format(col) for col in zoekcolumns]) + "\n)"
@@ -384,8 +391,7 @@ class BoekLeenDB:
             """
 
         query += search_condition + selection_condition
-        query += "order by titel"
-
+        query += "group by isbn\norder by titel"
         cursor = self.db.cursor()
         cursor.execute(query, query_args)
         return cursor.fetchall()
