@@ -61,6 +61,8 @@ class BoekWidget(Gtk.Grid):
         nieuw_boek_button.connect("clicked", self.on_nieuw_boek)
         wijzig_boek_button = Gtk.Button("Wijzig")
         wijzig_boek_button.connect("clicked", self.on_wijzig_boek)
+        uitleenstatus_button = Gtk.Button("Uitleenstatus wijzigen")
+        uitleenstatus_button.connect("clicked", self.on_uitleenstatus_boek)
         verwijder_boek_button = Gtk.Button("Verwijder")
         verwijder_boek_button.connect("clicked", self.on_verwijder_boek)
 
@@ -137,6 +139,7 @@ class BoekWidget(Gtk.Grid):
 
         actie_grid.add(nieuw_boek_button)
         actie_grid.add(wijzig_boek_button)
+        actie_grid.add(uitleenstatus_button)
         actie_grid.add(verwijder_boek_button)
 
         paneel = Gtk.Grid(margin=16, column_spacing=16, row_spacing=16,
@@ -228,6 +231,9 @@ class BoekWidget(Gtk.Grid):
     def on_status_select_toggled(self, button):
         if button.get_active():
             self.refresh()
+
+    def on_uitleenstatus_boek(self, button):
+        print("uitleenstatus")
 
     def on_wijzig_boek(self, button):
         model, path = self.boeklijst.view.get_selection().get_selected_rows()
