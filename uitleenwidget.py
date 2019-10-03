@@ -183,28 +183,16 @@ class UitleenWidget(Gtk.Grid):
             if response == Gtk.ResponseType.OK:
                 self.lener = dialog.get_lener()
             if response == 1 or response == Gtk.ResponseType.OK:
-                if self.lener:
-                    lener = self.db.persoon(self.lener)
-                    if not lener:
-                        print("error: onbekende lener: {}".format(self.lener))
-                    else:
-                        self.db.leenuit(self.lener, isbn)
-                        self.leenlog('<span foreground="blue" size="x-large"><b>→</b></span> {} {} leent <i>"{}"</i>'.format(
-                                lener['voornaam'],
-                                lener['achternaam'],
-                                boek['titel'],
-                            ))
+                lener = self.db.persoon(self.lener)
+                if not lener:
+                    print("error: onbekende lener: {}".format(self.lener))
                 else:
-                    message = Gtk.MessageDialog(
-                        self.parent,
-                        0,
-                        Gtk.MessageType.INFO,
-                        Gtk.ButtonsType.OK,
-                        "Geen lener geselecteerd!"
-                    )
-                    message.format_secondary_text("Boek niet als uitgeleend geregistreerd.")
-                    response = message.run()
-                    message.destroy()
+                    self.db.leenuit(self.lener, isbn)
+                    self.leenlog('<span foreground="blue" size="x-large"><b>→</b></span> {} {} leent <i>"{}"</i>'.format(
+                            lener['voornaam'],
+                            lener['achternaam'],
+                            boek['titel'],
+                        ))
                 self.refresh()
             dialog.destroy()
         self.parent.invalidate()
