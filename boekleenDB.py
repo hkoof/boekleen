@@ -17,7 +17,7 @@ class Row(sqlite3.Row):
     def __getitem__(self, key):
         if key in self.keys():
             return super().__getitem__(key)
-        return self.extra_attrs[key]
+        return self.extra_attrs.get(key)
 
     def __setitem__(self, key, value):
         self.extra_attrs[key] = value
