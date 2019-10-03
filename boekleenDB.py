@@ -345,6 +345,22 @@ class BoekLeenDB:
                        ''')
         return cursor.fetchall()
 
+    def alle_boeken_uitgebreid(self):
+        cursor = self.db.cursor()
+        cursor.execute('''select isbn,
+                                 titel,
+                                 auteur,
+                                 omschrijving,
+                                 trefwoorden,
+                                 categorie.categorienaam,
+                                 kastcode.code
+                          from boek, categorie, kastcode
+                          where kastcode.id = boek.kastcode_id
+                          and categorie.id = boek.categorie_id
+                          order by titel, auteur
+                       ''')
+        return cursor.fetchall()
+
     def zoek_boeken(self, zoekstring=None, zoekcolumns=None, selectie=None, uitgeleend=None):
         if not zoekstring:
             if not selectie:
