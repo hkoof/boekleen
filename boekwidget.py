@@ -23,6 +23,8 @@ class BoekWidget(Gtk.Grid):
             )
         self.boeklijst = DataLijst(columns, show_primary_key=False, expand=True)
         self.boeklijst.view.connect("row-activated", self.on_row_activated)
+        self.selection = self.boeklijst.view.get_selection()
+        self.selection.connect("changed", self.on_select_row)
 
         # Selectie controls
         #
@@ -59,12 +61,12 @@ class BoekWidget(Gtk.Grid):
 
         nieuw_boek_button = Gtk.Button("Nieuw")
         nieuw_boek_button.connect("clicked", self.on_nieuw_boek)
-        wijzig_boek_button = Gtk.Button("Wijzig")
-        wijzig_boek_button.connect("clicked", self.on_wijzig_boek)
-        uitleenstatus_button = Gtk.Button("Uitleenstatus wijzigen")
-        uitleenstatus_button.connect("clicked", self.on_uitleenstatus_boek)
-        verwijder_boek_button = Gtk.Button("Verwijder")
-        verwijder_boek_button.connect("clicked", self.on_verwijder_boek)
+        self.wijzig_boek_button = Gtk.Button("Wijzig")
+        self.wijzig_boek_button.connect("clicked", self.on_wijzig_boek)
+        self.uitleenstatus_button = Gtk.Button("Uitleenstatus wijzigen")
+        self.uitleenstatus_button.connect("clicked", self.on_uitleenstatus_boek)
+        self.verwijder_boek_button = Gtk.Button("Verwijder")
+        self.verwijder_boek_button.connect("clicked", self.on_verwijder_boek)
 
         self.default_categorie = None
         self.default_kastcode = None
@@ -138,9 +140,9 @@ class BoekWidget(Gtk.Grid):
         selectie_grid.add(selectie_reset_button)
 
         actie_grid.add(nieuw_boek_button)
-        actie_grid.add(wijzig_boek_button)
-        actie_grid.add(uitleenstatus_button)
-        actie_grid.add(verwijder_boek_button)
+        actie_grid.add(self.wijzig_boek_button)
+        actie_grid.add(self.uitleenstatus_button)
+        actie_grid.add(self.verwijder_boek_button)
 
         paneel = Gtk.Grid(margin=16, column_spacing=16, row_spacing=16,
                 orientation=Gtk.Orientation.HORIZONTAL,
@@ -176,8 +178,14 @@ class BoekWidget(Gtk.Grid):
             select_uitgeleend = True
 
         boeken = self.db.zoek_boeken(zoekstring, zoekvelden, selectie, select_uitgeleend)
-        self.boeklijst.load(boeken)
+        self.laad_boeken(boeken)
         self.invalidated = False
+
+    def laad_boeken(self, boeken):
+        self.boeklijst.load(boeken)
+        self.wijzig_boek_button.set_sensitive(False)
+        self.uitleenstatus_button.set_sensitive(False)
+        self.verwijder_boek_button .set_sensitive(False)
 
     def on_zoek_input_activate(self, entry):
         self.parent.set_focus(None)
@@ -236,7 +244,7 @@ class BoekWidget(Gtk.Grid):
         print("uitleenstatus")
 
     def on_wijzig_boek(self, button):
-        model, path = self.boeklijst.view.get_selection().get_selected_rows()
+        model, path = self.selection.get_selected_rows()
         if not path:
             return
         record = self.boeklijst.model[path]
@@ -244,7 +252,7 @@ class BoekWidget(Gtk.Grid):
         self.wijzig_boek(isbn)
 
     def on_verwijder_boek(self, button):
-        model, path = self.boeklijst.view.get_selection().get_selected_rows()
+        model, path = self.selection.get_selected_rows()
         if not path:
             return
         record = self.boeklijst.model[path]
@@ -317,6 +325,11 @@ class BoekWidget(Gtk.Grid):
                     self.db.delete_barcode_record(isbn)
         dialog.destroy()
 
+    def on_select_row(self, view):
+        self.wijzig_boek_button.set_sensitive(True)
+        self.uitleenstatus_button.set_sensitive(True)
+        self.verwijder_boek_button .set_sensitive(True)
+
     def on_isbn_scan(self, isbn):
         boek = self.db.boeken(isbn)
         if boek:
@@ -341,7 +354,7 @@ class BoekWidget(Gtk.Grid):
                     return
 
             self.zoek_input.set_text(isbn)
-            self.boeklijst.load((boek,))
+            self.boeklijst.laad_boeken((boek,))
             self.boeklijst.view.set_cursor(Gtk.TreePath(0))
             self.boeklijst.view.grab_focus()
             self.wijzig_boek(isbn)
