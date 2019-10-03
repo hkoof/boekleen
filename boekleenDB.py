@@ -339,7 +339,7 @@ class BoekLeenDB:
                                  titel,
                                  auteur,
                                  count(uitleningen.isbn) as leningen
-                          from boeken left outer join uitleningen using (isbn)
+                          from boek left outer join uitleningen using (isbn)
                           group by isbn
                           order by titel
                        ''')
@@ -357,7 +357,7 @@ class BoekLeenDB:
                           titel,
                           auteur,
                           count(uitleningen.isbn) as leningen
-                   from boeken left outer join uitleningen using (isbn)
+                   from boek left outer join uitleningen using (isbn)
                    where 1
         '''
         query_args = list()
