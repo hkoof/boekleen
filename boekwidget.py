@@ -7,6 +7,8 @@ from datetime import datetime
 from datalijst import DataLijst, ColumnDef
 from boekdialog import BoekDialog
 from recorddialog import ChoiceInput, ColoredChoiceInput
+from uitleendialog import UitleenDialog
+from terugbrengdialog import TerugbrengDialog
 
 class BoekWidget(Gtk.Grid):
     def __init__(self, parent, database):
@@ -181,6 +183,14 @@ class BoekWidget(Gtk.Grid):
         self.laad_boeken(boeken)
         self.invalidated = False
 
+    def get_selected_isbn(self):
+        model, path = self.selection.get_selected_rows()
+        if not path:
+            return
+        record = self.boeklijst.model[path]
+        isbn = record[0]
+        return isbn
+
     def laad_boeken(self, boeken):
         self.boeklijst.load(boeken)
         self.wijzig_boek_button.set_sensitive(False)
@@ -241,22 +251,34 @@ class BoekWidget(Gtk.Grid):
             self.refresh()
 
     def on_uitleenstatus_boek(self, button):
-        print("uitleenstatus")
+        isbn = self.get_selected_isbn()
+        uitlening = self.db.uitgeleend(isbn)
+        if uitlening:
+            dialog = TerugbrengDialog(self.parent, uitlening)
+            response = dialog.run()
+            if response == Gtk.ResponseType.OK:
+                self.db.brengterug(isbn)
+                self.refresh()
+            dialog.destroy()
+        else:
+            boek = self.db.boeken(isbn)
+            dialog = UitleenDialog(self.parent, self.db, boek)
+            response = dialog.run()
+            if response == Gtk.ResponseType.OK:
+                lener = dialog.get_lener()
+                #lener = self.db.persoon(lener)
+                if not lener:
+                    print("error: onbekende lener: {}".format(self.lener))
+                else:
+                    self.db.leenuit(lener, isbn)
+            dialog.destroy()
 
     def on_wijzig_boek(self, button):
-        model, path = self.selection.get_selected_rows()
-        if not path:
-            return
-        record = self.boeklijst.model[path]
-        isbn = record[0]
+        isbn = self.get_selected_isbn()
         self.wijzig_boek(isbn)
 
     def on_verwijder_boek(self, button):
-        model, path = self.selection.get_selected_rows()
-        if not path:
-            return
-        record = self.boeklijst.model[path]
-        isbn = record[0]
+        isbn = self.get_selected_isbn()
         self.verwijder_boek(isbn)
 
     def on_row_activated(self, view, path, column):
@@ -354,7 +376,7 @@ class BoekWidget(Gtk.Grid):
                     return
 
             self.zoek_input.set_text(isbn)
-            self.boeklijst.laad_boeken((boek,))
+            self.laad_boeken((boek,))
             self.boeklijst.view.set_cursor(Gtk.TreePath(0))
             self.boeklijst.view.grab_focus()
             self.wijzig_boek(isbn)
