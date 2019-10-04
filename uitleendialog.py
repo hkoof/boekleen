@@ -13,13 +13,16 @@ class UitleenDialog(Gtk.Dialog):
 
         self.default_lener_button = self.add_button('...', 1)
         self.default_lener_button.set_sensitive(False)
-        self.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL).set_can_focus(False)
-        self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        self.button_cancel = self.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL).set_can_focus(False)
+        self.button_OK = self.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        self.button_OK.set_sensitive(False)
 
         self.set_default_response(Gtk.ResponseType.OK)
 
         self.boeklabel = Gtk.Label()
         self.lenerswidget = PersoonWidget(self, database, read_only=True)
+        self.selection = self.lenerswidget.lijst.lijst.view.get_selection()
+        self.selection.connect("changed", self.on_select_row)
 
         # Layout
         #
@@ -61,6 +64,13 @@ class UitleenDialog(Gtk.Dialog):
             )
         )
         self.boeklabel.set_use_markup(True)
+
+    def on_select_row(self, view):
+        if self.lenerswidget.lijst.get_selected():
+            self.button_OK.set_sensitive(True)
+        else:
+            self.button_OK.set_sensitive(False)
+
 
     def on_row_activated(self, view, path, column):
         self.response(Gtk.ResponseType.OK)
