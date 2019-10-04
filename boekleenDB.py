@@ -17,7 +17,7 @@ class Row(sqlite3.Row):
     def __getitem__(self, key):
         if key in self.keys():
             return super().__getitem__(key)
-        return self.extra_attrs[key]
+        return self.extra_attrs.get(key)
 
     def __setitem__(self, key, value):
         self.extra_attrs[key] = value
@@ -337,27 +337,52 @@ class BoekLeenDB:
         cursor = self.db.cursor()
         cursor.execute('''select isbn,
                                  titel,
-                                 auteur
-                          from   boek
+                                 auteur,
+                                 count(uitleningen.isbn) as leningen
+                          from boek left outer join uitleningen using (isbn)
+                          group by isbn
                           order by titel
                        ''')
         return cursor.fetchall()
 
-    def zoek_boeken(self, zoekstring=None, zoekcolumns=None, selectie=None):
+    def alle_boeken_uitgebreid(self):
+        cursor = self.db.cursor()
+        cursor.execute('''select isbn,
+                                 titel,
+                                 auteur,
+                                 omschrijving,
+                                 trefwoorden,
+                                 categorie.categorienaam,
+                                 kastcode.code
+                          from boek, categorie, kastcode
+                          where kastcode.id = boek.kastcode_id
+                          and categorie.id = boek.categorie_id
+                          order by titel, auteur
+                       ''')
+        return cursor.fetchall()
+
+    def zoek_boeken(self, zoekstring=None, zoekcolumns=None, selectie=None, uitgeleend=None):
         if not zoekstring:
             if not selectie:
-                return self.alle_boeken()
+                if uitgeleend == None:
+                    return self.alle_boeken()
         elif not zoekcolumns:
             return list()
 
-        query = "select * from boek\nwhere\n"
+        query = '''select isbn,
+                          titel,
+                          auteur,
+                          count(uitleningen.isbn) as leningen
+                   from boek left outer join uitleningen using (isbn)
+                   where 1
+        '''
         query_args = list()
         if zoekstring:
-            search_condition = "(\n    " + "\n    or ".join(["{} like ?".format(col) for col in zoekcolumns]) + "\n)"
+            search_condition = "and (\n    " + "\n    or ".join(["{} like ?".format(col) for col in zoekcolumns]) + "\n)"
             args = [ "%{}%".format(zoekstring) for tmp in range(len(zoekcolumns))]
             query_args.extend(args)
         else:
-            search_condition = None
+            search_condition = ""
 
         if selectie:
             selection_list = list()
@@ -365,19 +390,24 @@ class BoekLeenDB:
             for key, val in selectie.items():
                 selection_list.append("{} = ?".format(key))
                 args.append(val)
-            selection_condition = "(\n    " + "\n    and ".join(selection_list) + "\n)"
+            selection_condition = "and (\n    " + "\n    and ".join(selection_list) + ")\n"
             query_args.extend(args)
         else:
-            selection_condition = None
+            selection_condition = ""
 
-        if search_condition:
-            query += search_condition
-            if selection_condition:
-                query += "\nand\n" + selection_condition
-        else:
-            query += selection_condition
+        if uitgeleend == True:
+            selection_condition += """
+                and isbn in (select isbn from uitleningen where teruggebracht is null
+                and uitleningen.persoon_id in (select id from persoon))
+            """
+        elif uitgeleend == False:
+            selection_condition += """
+                and isbn not in (select isbn from uitleningen where teruggebracht is null
+                and uitleningen.persoon_id in (select id from persoon))
+            """
 
-        query += "\norder by titel"
+        query += search_condition + selection_condition
+        query += "group by isbn\norder by titel"
         cursor = self.db.cursor()
         cursor.execute(query, query_args)
         return cursor.fetchall()
@@ -451,6 +481,7 @@ class BoekLeenDB:
             select titel,
                    voornaam,
                    achternaam,
+                   klas,
                    auteur,
                    uitgeleend,
                    teruggebracht

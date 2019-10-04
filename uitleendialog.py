@@ -62,4 +62,5 @@ class UitleenDialog(Gtk.Dialog):
         )
         self.boeklabel.set_use_markup(True)
 
-
+    def on_row_activated(self, view, path, column):
+        self.response(Gtk.ResponseType.OK)

@@ -39,7 +39,7 @@ class Stub(Gtk.Label):
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.set_default_size(600, 600)
+        self.set_default_size(900, 600)
 
         self.notebook = Gtk.Notebook()
         self.notebook.set_tab_pos(Gtk.PositionType.BOTTOM)

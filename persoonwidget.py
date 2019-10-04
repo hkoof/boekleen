@@ -182,7 +182,10 @@ class PersoonWidget(Gtk.Grid):
 
     def on_row_activated(self, view, path, column):
         if self.read_only:
-            return
+            if hasattr(self.parent, 'on_row_activated'):
+                return self.parent.on_row_activated(view, path, column)
+            else:
+                return
         record = self.lijst.model[path]
         persoon_id = record[0]
         self.wijzig_persoon(persoon_id)

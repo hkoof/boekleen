@@ -7,6 +7,8 @@ from datetime import datetime
 from datalijst import DataLijst, ColumnDef
 from boekdialog import BoekDialog
 from recorddialog import ChoiceInput, ColoredChoiceInput
+from uitleendialog import UitleenDialog
+from terugbrengdialog import TerugbrengDialog
 
 class BoekWidget(Gtk.Grid):
     def __init__(self, parent, database):
@@ -19,9 +21,12 @@ class BoekWidget(Gtk.Grid):
                 ColumnDef("ISBN", "isbn"),
                 ColumnDef("Titel", "titel"),
                 ColumnDef("Auteur", "auteur"),
+                ColumnDef("# Leningen", "leningen", datatype=int),
             )
         self.boeklijst = DataLijst(columns, show_primary_key=False, expand=True)
         self.boeklijst.view.connect("row-activated", self.on_row_activated)
+        self.selection = self.boeklijst.view.get_selection()
+        self.selection.connect("changed", self.on_select_row)
 
         # Selectie controls
         #
@@ -43,15 +48,27 @@ class BoekWidget(Gtk.Grid):
         self.kastcode_select.set_choices(kastcodes)
         self.kastcode_select.widget.set_active_id('')
         self.kastcode_select.widget.connect("changed", self.refresh)
+
+        self.status_select_alle = Gtk.RadioButton.new_with_label_from_widget(None, "Alle")
+        self.status_select_alle.connect("toggled", self.on_status_select_toggled)
+
+        self.status_select_aanwezig = Gtk.RadioButton.new_with_label_from_widget(self.status_select_alle, "Aanwezig")
+        self.status_select_aanwezig.connect("toggled", self.on_status_select_toggled)
+
+        self.status_select_uitgeleend = Gtk.RadioButton.new_with_label_from_widget(self.status_select_alle, "Uitgeleend")
+        self.status_select_uitgeleend.connect("toggled", self.on_status_select_toggled)
+
         selectie_reset_button = Gtk.Button("Reset")
         selectie_reset_button.connect("clicked", self.on_selectie_reset_clicked)
 
         nieuw_boek_button = Gtk.Button("Nieuw")
         nieuw_boek_button.connect("clicked", self.on_nieuw_boek)
-        wijzig_boek_button = Gtk.Button("Wijzig")
-        wijzig_boek_button.connect("clicked", self.on_wijzig_boek)
-        verwijder_boek_button = Gtk.Button("Verwijder")
-        verwijder_boek_button.connect("clicked", self.on_verwijder_boek)
+        self.wijzig_boek_button = Gtk.Button("Wijzig")
+        self.wijzig_boek_button.connect("clicked", self.on_wijzig_boek)
+        self.uitleenstatus_button = Gtk.Button("Uitleenstatus wijzigen")
+        self.uitleenstatus_button.connect("clicked", self.on_uitleenstatus_boek)
+        self.verwijder_boek_button = Gtk.Button("Verwijder")
+        self.verwijder_boek_button.connect("clicked", self.on_verwijder_boek)
 
         self.default_categorie = None
         self.default_kastcode = None
@@ -104,14 +121,30 @@ class BoekWidget(Gtk.Grid):
         zoek_grid.add(zoekbutton_grid)
         zoek_grid.add(zoekvelden_paneel)
 
+        status_select_grid = Gtk.Grid(
+                margin=8,
+                column_spacing=4,
+                row_spacing=4,
+                orientation=Gtk.Orientation.VERTICAL
+            )
+
+        status_select_grid.add(self.status_select_alle)
+        status_select_grid.add(self.status_select_aanwezig)
+        status_select_grid.add(self.status_select_uitgeleend)
+
+        status_select_paneel = Gtk.Frame(label="Status")
+        status_select_paneel.add(status_select_grid)
+
         selectie_grid.add(self.kastcode_select.widget)
         selectie_grid.add(self.categorie_select.widget)
-        selectie_grid.add(Gtk.Label())
+        selectie_grid.add(status_select_paneel)
+        #selectie_grid.add(Gtk.Label())
         selectie_grid.add(selectie_reset_button)
 
         actie_grid.add(nieuw_boek_button)
-        actie_grid.add(wijzig_boek_button)
-        actie_grid.add(verwijder_boek_button)
+        actie_grid.add(self.wijzig_boek_button)
+        actie_grid.add(self.uitleenstatus_button)
+        actie_grid.add(self.verwijder_boek_button)
 
         paneel = Gtk.Grid(margin=16, column_spacing=16, row_spacing=16,
                 orientation=Gtk.Orientation.HORIZONTAL,
@@ -140,9 +173,29 @@ class BoekWidget(Gtk.Grid):
         zoekvelden = [naam for naam, veld in self.zoekvelden.items() if veld.get_active()]
         zoekstring = self.zoek_input.get_text()
 
-        boeken = self.db.zoek_boeken(zoekstring, zoekvelden, selectie)
-        self.boeklijst.load(boeken)
+        select_uitgeleend = None
+        if self.status_select_aanwezig.get_active():
+            select_uitgeleend = False
+        elif self.status_select_uitgeleend.get_active():
+            select_uitgeleend = True
+
+        boeken = self.db.zoek_boeken(zoekstring, zoekvelden, selectie, select_uitgeleend)
+        self.laad_boeken(boeken)
         self.invalidated = False
+
+    def get_selected_isbn(self):
+        model, path = self.selection.get_selected_rows()
+        if not path:
+            return
+        record = self.boeklijst.model[path]
+        isbn = record[0]
+        return isbn
+
+    def laad_boeken(self, boeken):
+        self.boeklijst.load(boeken)
+        self.wijzig_boek_button.set_sensitive(False)
+        self.uitleenstatus_button.set_sensitive(False)
+        self.verwijder_boek_button .set_sensitive(False)
 
     def on_zoek_input_activate(self, entry):
         self.parent.set_focus(None)
@@ -159,8 +212,9 @@ class BoekWidget(Gtk.Grid):
         self.refresh()
 
     def on_selectie_reset_clicked(self, button):
-        self.categorie_select.widget.set_active(0)
-        self.kastcode_select.widget.set_active(0)
+        self.categorie_select.widget.set_active(False)
+        self.kastcode_select.widget.set_active(False)
+        self.status_select_alle.set_active(True)
 
     def on_nieuw_boek(self, button):
         self.nieuw_boek()
@@ -192,20 +246,39 @@ class BoekWidget(Gtk.Grid):
         self.parent.invalidate()
         self.refresh()
 
+    def on_status_select_toggled(self, button):
+        if button.get_active():
+            self.refresh()
+
+    def on_uitleenstatus_boek(self, button):
+        isbn = self.get_selected_isbn()
+        uitlening = self.db.uitgeleend(isbn)
+        if uitlening:
+            dialog = TerugbrengDialog(self.parent, uitlening)
+            response = dialog.run()
+            if response == Gtk.ResponseType.OK:
+                self.db.brengterug(isbn)
+                self.refresh()
+            dialog.destroy()
+        else:
+            boek = self.db.boeken(isbn)
+            dialog = UitleenDialog(self.parent, self.db, boek)
+            response = dialog.run()
+            if response == Gtk.ResponseType.OK:
+                lener = dialog.get_lener()
+                #lener = self.db.persoon(lener)
+                if not lener:
+                    print("error: onbekende lener: {}".format(self.lener))
+                else:
+                    self.db.leenuit(lener, isbn)
+            dialog.destroy()
+
     def on_wijzig_boek(self, button):
-        model, path = self.boeklijst.view.get_selection().get_selected_rows()
-        if not path:
-            return
-        record = self.boeklijst.model[path]
-        isbn = record[0]
+        isbn = self.get_selected_isbn()
         self.wijzig_boek(isbn)
 
     def on_verwijder_boek(self, button):
-        model, path = self.boeklijst.view.get_selection().get_selected_rows()
-        if not path:
-            return
-        record = self.boeklijst.model[path]
-        isbn = record[0]
+        isbn = self.get_selected_isbn()
         self.verwijder_boek(isbn)
 
     def on_row_activated(self, view, path, column):
@@ -274,9 +347,15 @@ class BoekWidget(Gtk.Grid):
                     self.db.delete_barcode_record(isbn)
         dialog.destroy()
 
+    def on_select_row(self, view):
+        self.wijzig_boek_button.set_sensitive(True)
+        self.uitleenstatus_button.set_sensitive(True)
+        self.verwijder_boek_button .set_sensitive(True)
+
     def on_isbn_scan(self, isbn):
-        boek = self.db.boeken(isbn)
+        boek = self.db.zoek_boeken(isbn, ('isbn',))
         if boek:
+            boek = boek[0]
             verwijderd = boek['verwijdertijdstip']
             if verwijderd:
                 tijdstip = datetime.fromtimestamp(verwijderd)
@@ -298,7 +377,7 @@ class BoekWidget(Gtk.Grid):
                     return
 
             self.zoek_input.set_text(isbn)
-            self.boeklijst.load((boek,))
+            self.laad_boeken((boek,))
             self.boeklijst.view.set_cursor(Gtk.TreePath(0))
             self.boeklijst.view.grab_focus()
             self.wijzig_boek(isbn)
