@@ -25,7 +25,7 @@ class About(Gtk.Label):
         super().__init__()
         self.invalidated = False
         self.set_markup("<span size='x-large'>"
-                        "<b>Boekleen</b> versie 3\n"
+                        "<b>Boekleen</b> versie 4\n"
                         "GNU Public License (GPL)\n"
                         "© 2019 Heiko Noordhof\n"
                         "</span>")
