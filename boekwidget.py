@@ -353,8 +353,9 @@ class BoekWidget(Gtk.Grid):
         self.verwijder_boek_button .set_sensitive(True)
 
     def on_isbn_scan(self, isbn):
-        boek = self.db.boeken(isbn)
+        boek = self.db.zoek_boeken(isbn, ('isbn',))
         if boek:
+            boek = boek[0]
             verwijderd = boek['verwijdertijdstip']
             if verwijderd:
                 tijdstip = datetime.fromtimestamp(verwijderd)
