@@ -122,7 +122,7 @@ class BarcodePrinter:
         else:
             result = subprocess.run(
                         command,
-                        text=True,
+                        universal_newlines=True,
                         input='\n'.join(barcodes),
                     )
             return result.stderr
