@@ -109,7 +109,7 @@ class UitleenWidget(Gtk.Grid):
         self.add(self.leenlijst)
 
     def refresh(self, sender=None):
-        # Don't double refresh. The radiobutton that loses being "on" als send the signal
+        # Don't double refresh. The radiobutton that loses being "on" also sends the signal
         if isinstance(sender, Gtk.RadioButton) and not sender.get_active():
             return
         if self.vandaag_radio.get_active():
