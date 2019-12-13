@@ -478,7 +478,8 @@ class BoekLeenDB:
         ):
         cursor = self.db.cursor()
         query = '''
-            select titel,
+            select boek.isbn,
+                   titel,
                    voornaam,
                    achternaam,
                    klas,

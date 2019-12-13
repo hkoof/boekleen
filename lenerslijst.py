@@ -3,6 +3,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
 from datalijst import DataLijst, ColumnDef
+from terugbrengdialog import TerugbrengDialog
 
 class LenersLijst(Gtk.Grid):
     def __init__(self, parent, database):
@@ -28,7 +29,7 @@ class LenersLijst(Gtk.Grid):
         self.lijst.view.connect("cursor-changed", self.on_select)
         self.lijst.view.connect("focus-out-event", self.on_focus_out)
 
-        self.leenmodel = Gtk.ListStore(str)
+        self.leenmodel = Gtk.ListStore(str, str)
         self.leenview = Gtk.TreeView(
                 enable_grid_lines=False,
         #        headers_visible=False,
@@ -39,12 +40,16 @@ class LenersLijst(Gtk.Grid):
         self.leenview.set_model(self.leenmodel)
         scroller = Gtk.ScrolledWindow()
         scroller.add(self.leenview)
+        self.leenview.connect("row-activated", self.on_row_activate_leenview)
 
         renderer1 = Gtk.CellRendererText()
-        col1 = Gtk.TreeViewColumn("Boeken in leen", renderer1, text=0)
+        col0 = Gtk.TreeViewColumn("isbn", renderer1, text=0)
+        col0.set_visible(False)
+        col1 = Gtk.TreeViewColumn("Boeken in leen", renderer1, text=1)
         col1.set_resizable(False)
         #col1.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
         col1.set_max_width(300)
+        self.leenview.append_column(col0)
         self.leenview.append_column(col1)
 
         detail_frame = Gtk.Frame(margin=12)
@@ -79,9 +84,23 @@ class LenersLijst(Gtk.Grid):
         uitleningen = self.db.uitleningen(persoon_id, uitgeleend=True)
         self.leenmodel.clear()
         for lening in uitleningen:
-            row = ('"{}"  -  {}'.format(lening['titel'], lening['auteur']),)
+            row = ((lening['isbn'], '"{}"  -  {}'.format(lening['titel'], lening['auteur']),))
             self.leenmodel.append(row)
 
     def on_focus_out(self, treeview, event):
         self.reload_leenview()
 
+    def on_row_activate_leenview(self, view, path, column):
+        record = self.leenmodel[path]
+        isbn = record[0]
+
+        uitlening = self.db.uitgeleend(isbn)
+        if uitlening:
+            dialog = TerugbrengDialog(self.parent.parent, uitlening)
+            response = dialog.run()
+            if response == Gtk.ResponseType.OK:
+                self.db.brengterug(isbn)
+                self.reload_leenview()
+            dialog.destroy()
+        else:
+            print("error: {} {} is niet uitgeleend")
