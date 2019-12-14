@@ -49,6 +49,7 @@ class UitleenWidget(Gtk.Grid):
         self.logview.set_editable(False)
         self.logview.set_cursor_visible(False)
         self.logbuffer = self.logview.get_buffer()
+        self.loglabel = Gtk.Label(hexpand=True)
 
         columns = (
             ColumnDef("Titel", "titel"),
@@ -90,8 +91,23 @@ class UitleenWidget(Gtk.Grid):
 
         scrolled_logview = Gtk.ScrolledWindow(margin=4)
         scrolled_logview.add(self.logview)
+
+        logstack = Gtk.Stack()
+        logstack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
+        logstack.set_transition_duration(400)
+        logstack.add_titled(self.loglabel, "log-eenvoudig", "Eenvoudig")
+        logstack.add_titled(scrolled_logview, "log-details", "Gedetailleerd")
+
+        logswitch = Gtk.StackSwitcher()
+        logswitch.set_stack(logstack)
+
+        switchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        switchbox.set_border_width(4)
+        switchbox.pack_start(logstack, True, True, 4)
+        switchbox.pack_start(logswitch, True, True, 4)
+
         log_paneel = Gtk.Frame(label="Log")
-        log_paneel.add(scrolled_logview)
+        log_paneel.add(switchbox)
 
         paneel = Gtk.Grid(
                 margin=12,
@@ -126,12 +142,13 @@ class UitleenWidget(Gtk.Grid):
         self.leenlijst.load(data)
         self.invalidated = False
 
-    def leenlog(self, pangotext):
+    def leenlog(self, text, simpletext):
         where = self.logbuffer.get_start_iter()
         now = datetime.now().strftime("%H:%M:%S")
-        pangotext = "{} {}\n".format(now, pangotext)
+        pangotext = "{} {}\n".format(now, text)
         self.logbuffer.insert_markup(where, pangotext, -1)
         self.logview.scroll_to_iter(where, 0.0, False, 0.0, 0.0)
+        self.loglabel.set_markup(simpletext)
 
     def on_handmatig_clicked(self, button):
         isbn = self.barcode.get_text()
@@ -170,11 +187,17 @@ class UitleenWidget(Gtk.Grid):
         if uitlening:
             self.db.brengterug(isbn)
             self.refresh()
-            self.leenlog('<span foreground="green" size="x-large"><b>←</b></span> {} {} brengt <i>"{}"</i> terug'.format(
+            self.leenlog('<span foreground="green"><b>←</b></span> {} {} brengt <i>"{}"</i> terug'.format(
                     uitlening['voornaam'],
                     uitlening['achternaam'],
                     uitlening['titel'],
-                ))
+                ),
+                '<span size="22000">"{}"</span>\nteruggebracht door\n<span size="x-large">{} {}</span>'.format(
+                    uitlening['titel'],
+                    uitlening['voornaam'],
+                    uitlening['achternaam'],
+                ),
+            )
         else:
             dialog = UitleenDialog(self.parent, self.db, boek, self.lener)
             response = dialog.run()
@@ -188,11 +211,17 @@ class UitleenWidget(Gtk.Grid):
                     print("error: onbekende lener: {}".format(self.lener))
                 else:
                     self.db.leenuit(self.lener, isbn)
-                    self.leenlog('<span foreground="blue" size="x-large"><b>→</b></span> {} {} leent <i>"{}"</i>'.format(
+                    self.leenlog('<span foreground="blue"><b>→</b></span> {} {} leent <i>"{}"</i>'.format(
                             lener['voornaam'],
                             lener['achternaam'],
                             boek['titel'],
-                        ))
+                    ),
+                    '<span size="22000">"{}"</span>\nuitgeleend aan\n<span size="x-large">{} {}</span>'.format(
+                            boek['titel'],
+                            lener['voornaam'],
+                            lener['achternaam'],
+                    ),
+                )
                 self.refresh()
             dialog.destroy()
         self.parent.invalidate()
