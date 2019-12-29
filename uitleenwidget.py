@@ -94,17 +94,21 @@ class UitleenWidget(Gtk.Grid):
 
         logstack = Gtk.Stack()
         logstack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
-        logstack.set_transition_duration(400)
+        logstack.set_transition_duration(200)
         logstack.add_titled(self.loglabel, "log-eenvoudig", "Eenvoudig")
         logstack.add_titled(scrolled_logview, "log-details", "Gedetailleerd")
 
         logswitch = Gtk.StackSwitcher()
         logswitch.set_stack(logstack)
 
+        switchcenterbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        switchcenterbox.pack_start(Gtk.Label(), True, True, 4)
+        switchcenterbox.pack_start(logswitch, True, True, 4)
+        switchcenterbox.pack_start(Gtk.Label(), True, True, 4)
+
         switchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
-        switchbox.set_border_width(4)
         switchbox.pack_start(logstack, True, True, 4)
-        switchbox.pack_start(logswitch, True, True, 4)
+        switchbox.pack_start(switchcenterbox, True, True, 4)
 
         log_paneel = Gtk.Frame(label="Log")
         log_paneel.add(switchbox)
