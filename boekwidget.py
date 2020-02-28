@@ -65,7 +65,7 @@ class BoekWidget(Gtk.Grid):
         nieuw_boek_button.connect("clicked", self.on_nieuw_boek)
         self.wijzig_boek_button = Gtk.Button("Wijzig")
         self.wijzig_boek_button.connect("clicked", self.on_wijzig_boek)
-        self.uitleenstatus_button = Gtk.Button("Uitleenstatus wijzigen")
+        self.uitleenstatus_button = Gtk.Button("Uitleenstatus")
         self.uitleenstatus_button.connect("clicked", self.on_uitleenstatus_boek)
         self.verwijder_boek_button = Gtk.Button("Verwijder")
         self.verwijder_boek_button.connect("clicked", self.on_verwijder_boek)

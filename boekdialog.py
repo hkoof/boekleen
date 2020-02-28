@@ -26,7 +26,7 @@ class BoekDialog(RecordDialog):
         categorien = [(str(cat['id']), cat['categorienaam']) for cat in self.db.alle_categorien()]
         self.items["categorie_id"].set_choices(categorien)
 
-        self.items["omschrijving"] = TextInput("Omschrijving", 3)
+        self.items["omschrijving"] = TextInput("Omschrijving", 2)
         self.items["trefwoorden"] = TextInput("Trefwoorden", 2)
 
         self.boek = self.db.boek(isbn)

@@ -41,6 +41,8 @@ class Application(Gtk.Application):
     def do_activate(self):
         if not self.stop:
             self.window = MainWindow(application=self, title="Boekleen")
+            if self.maximize:
+                self.window.maximize()
             self.window.show()
 
 if __name__ == "__main__":
@@ -71,11 +73,11 @@ if __name__ == "__main__":
             action='version',
             version='%(prog)s {}'.format(prog.version),
         )
-#    parser.add_argument(
-#            "-v", "--verbose",
-#            action="store_true",
-#            help="wollige proza",
-#        )
+    parser.add_argument(
+            "-m", "--maximize",
+            action="store_true",
+            help="Start met window maximale grootte",
+        )
     parser.add_argument(
             "--database",
             nargs='?',
@@ -101,6 +103,7 @@ if __name__ == "__main__":
         else:
             app.tabs.append(tab)
     app.db_path = args.database
+    app.maximize = args.maximize
     del args, parser
     app.run()
 
