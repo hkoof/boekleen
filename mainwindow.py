@@ -6,6 +6,7 @@ import re
 import signal
 from collections import deque
 
+import prog
 from boekwidget import BoekWidget
 from kastcodewidget import KastcodeWidget
 from categoriewidget import CategorieWidget
@@ -25,10 +26,10 @@ class About(Gtk.Label):
         super().__init__()
         self.invalidated = False
         self.set_markup("<span size='x-large'>"
-                        "<b>Boekleen</b> versie 5\n"
+                        "<b>{}</b> versie {}\n"
                         "GNU Public License (GPL)\n"
                         "© 2019 Heiko Noordhof\n"
-                        "</span>")
+                        "</span>".format(prog.name.capitalize(), prog.version))
 
 class Stub(Gtk.Label):
     def __init__(self):
